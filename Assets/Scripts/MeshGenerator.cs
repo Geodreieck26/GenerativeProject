@@ -4,11 +4,11 @@ using System.Collections.Generic;
 
 [RequireComponent(typeof(MeshRenderer))]
 [RequireComponent(typeof(MeshFilter))]
-[RequireComponent(typeof(AudioAnalyzer))]
 
-public class MeshGenerator : MonoBehaviour {
 
-    private AudioAnalyzer audioAnalyzer;
+public class MeshGenerator : MonoBehaviour, AudioAnalyzer.AudioCallbacks{
+
+    public AudioAnalyzer audioAnalyzer;
     //private Camera mainCamera;
 
 
@@ -49,13 +49,14 @@ public class MeshGenerator : MonoBehaviour {
     private int moduloCounter;
 
 
-
+    private int beatCounter = 0;
 
 
     // Use this for initialization
     void Start () {
 
-        audioAnalyzer = GetComponent<AudioAnalyzer>();
+        audioAnalyzer = FindObjectOfType<AudioAnalyzer>();
+        audioAnalyzer.addAudioCallback(this);
         //mainCamera = Camera.main;
 
         mesh = new Mesh();
@@ -81,6 +82,8 @@ public class MeshGenerator : MonoBehaviour {
 
 
         GenerateBaseMesh();
+
+        Invoke("BPM",10);
 
 
         expandMesh = true;
@@ -235,8 +238,7 @@ public class MeshGenerator : MonoBehaviour {
         {
             InvokeRepeating("AddRow", 0, updateMesh);
             //addRow();
-            expandMesh = false;
-            
+            expandMesh = false;            
         }
 	}
 
@@ -244,7 +246,8 @@ public class MeshGenerator : MonoBehaviour {
     void OffsetVertices(int start, int end)
     {
         frequencyData = audioAnalyzer.GetFrequencyData();
-      
+
+        Debug.Log(frequencyData.Length);
         int counter = 0;
        
         for(int i = start; i <= end; i++)
@@ -274,7 +277,31 @@ public class MeshGenerator : MonoBehaviour {
 
     }
 
-  
+
+    private void BPM()
+    {
+        Debug.Log("bpm: " + beatCounter *6);
+    }
+
+    public void onOnbeatDetected(float beatStrength)
+    {
+        beatCounter++;
+    }
+
+    public void onSpectrum(float[] spectrum)
+    {
+        ////The spectrum is logarithmically averaged
+        ////to 12 bands
+
+        //for (int i = 0; i < spectrum.Length; ++i)
+        //{
+        //    Vector3 start = new Vector3(i, 0, 0);
+        //    Vector3 end = new Vector3(i, spectrum[i], 0);
+        //    Debug.DrawLine(start, end);
+        //}
+    }
+
+
 
     void OnDisable()
     {
