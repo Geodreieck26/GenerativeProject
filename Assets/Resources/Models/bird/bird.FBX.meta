@@ -1,0 +1,159 @@
+fileFormatVersion: 2
+guid: f1d2ee8cc4bc1f2458b7bae7498a8d92
+timeCreated: 1452003686
+licenseType: Free
+ModelImporter:
+  serializedVersion: 18
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: bird
+    100004: CATRigHub001
+    100006: CATRigHub003
+    100008: CATRigHub003Bone001
+    100010: CATRigLArm1
+    100012: CATRigLArm2
+    100014: CATRigRArm1
+    100016: CATRigRArm2
+    100018: CATRigRArmCollarbone
+    100020: CATRigSpine
+    100022: CATRigTail1
+    100024: Character001
+    100026: Object001
+    400000: //RootNode
+    400002: bird
+    400004: CATRigHub001
+    400006: CATRigHub003
+    400008: CATRigHub003Bone001
+    400010: CATRigLArm1
+    400012: CATRigLArm2
+    400014: CATRigRArm1
+    400016: CATRigRArm2
+    400018: CATRigRArmCollarbone
+    400020: CATRigSpine
+    400022: CATRigTail1
+    400024: Character001
+    400026: Object001
+    2300000: //RootNode
+    3300000: //RootNode
+    4300000: bird
+    7400000: fly
+    9500000: //RootNode
+    13700000: bird
+  materials:
+    importMaterials: 0
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: .5
+    animationPositionError: .5
+    animationScaleError: .5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: fly
+      takeName: Take 001
+      firstFrame: 0
+      lastFrame: 25
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 1
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: bird
+        weight: 1
+      - path: CATRigHub001
+        weight: 1
+      - path: CATRigHub001/CATRigSpine
+        weight: 1
+      - path: CATRigHub001/CATRigSpine/CATRigHub003
+        weight: 1
+      - path: CATRigHub001/CATRigSpine/CATRigHub003/CATRigHub003Bone001
+        weight: 1
+      - path: CATRigHub001/CATRigSpine/CATRigHub003/CATRigRArmCollarbone
+        weight: 1
+      - path: CATRigHub001/CATRigSpine/CATRigHub003/CATRigRArmCollarbone/CATRigRArm1
+        weight: 1
+      - path: CATRigHub001/CATRigSpine/CATRigHub003/CATRigRArmCollarbone/CATRigRArm1/CATRigRArm2
+        weight: 1
+      - path: CATRigHub001/CATRigSpine/CATRigHub003/Object001
+        weight: 1
+      - path: CATRigHub001/CATRigSpine/CATRigHub003/Object001/CATRigLArm1
+        weight: 1
+      - path: CATRigHub001/CATRigSpine/CATRigHub003/Object001/CATRigLArm1/CATRigLArm2
+        weight: 1
+      - path: CATRigHub001/CATRigTail1
+        weight: 1
+      - path: Character001
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    splitTangentsAcrossUV: 1
+    normalImportMode: 0
+    tangentImportMode: 1
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: .5
+    foreArmTwist: .5
+    upperLegTwist: .5
+    legTwist: .5
+    armStretch: .0500000007
+    legStretch: .0500000007
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

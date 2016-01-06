@@ -6,6 +6,10 @@ using System.Collections;
 
 public class FlockController : MonoBehaviour {
 
+    // update rate for the single boids
+    [SerializeField]
+    public float updateRate = 0.2f;
+
     // flock behaviour and stats variables
     [SerializeField]
     public float minVel = 5;
@@ -44,6 +48,8 @@ public class FlockController : MonoBehaviour {
 
     // the controlled boids
     private GameObject[] boids;
+    [SerializeField]
+    public float animOffset = 0.4f;
 
     // sound analyzer
     private AudioAnalyzer audioAnalyzer;

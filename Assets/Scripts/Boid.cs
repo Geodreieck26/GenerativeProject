@@ -3,15 +3,30 @@ using System.Collections;
 
 public class Boid : MonoBehaviour
 {
-
+    // the controller the boid belongs to
     private GameObject flockController;
+
+    // initializing variable
     private bool init = false;
+
+    // the corresponding animator
+    private Animator anim;
+
+    void Start()
+    {
+        iTween.Init(gameObject);
+
+        // set animation
+        anim = GetComponent<Animator>();
+        float random = Random.Range(-flockController.GetComponent<FlockController>().animOffset, flockController.GetComponent<FlockController>().animOffset);
+        anim.speed = anim.speed + random;
+    }
 
     void Update()
     {
         if (init)
         {
-            InvokeRepeating("Flying", 0, Random.Range(0.1f, 0.3f));
+            InvokeRepeating("Flying", 0, flockController.GetComponent<FlockController>().updateRate);
             init = false;
         }
     }
@@ -25,6 +40,10 @@ public class Boid : MonoBehaviour
         // calculate new velocity
         Vector3 velocity = GetComponent<Rigidbody>().velocity;
         velocity = velocity + CalculateVel() * Time.deltaTime;
+
+        // rotate boid for animation purposes
+        // transform.forward = velocity.normalized;
+        iTween.LookUpdate(gameObject, transform.position+velocity.normalized, controller.updateRate);
 
         // clamp boids speed to minimum and maximum
         float speed = velocity.magnitude;
