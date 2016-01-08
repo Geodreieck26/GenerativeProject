@@ -68,7 +68,7 @@ public class MeshGenerator : MonoBehaviour, AudioAnalyzer.AudioCallbacks{
     public float updateRate;
     private float currentTime;
     // Use this for initialization
-    void Start () {
+    void Awake () {
 
         currentObjects = new Queue<ObjectTypes>();
 
