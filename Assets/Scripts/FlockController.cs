@@ -1,14 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 [RequireComponent(typeof(BoxCollider))]
-[RequireComponent(typeof(AudioAnalyzer))]
 
-public class FlockController : MonoBehaviour {
+public class FlockController : MonoBehaviour, AudioAnalyzer.AudioCallbacks
+{
 
     // update rate for the single boids
     [SerializeField]
+    [Range(0.0f, 5.0f)]
     public float updateRate = 0.2f;
+
+    // clamp forward rotation?
+    [SerializeField]
+    public bool clampZ = true;
+    public bool clampX = false;
 
     // flock behaviour and stats variables
     [SerializeField]
@@ -52,13 +59,14 @@ public class FlockController : MonoBehaviour {
     public float animOffset = 0.4f;
 
     // sound analyzer
+    [SerializeField]
     private AudioAnalyzer audioAnalyzer;
     private float[] frequencyData;
 
     void Start()
     {
         // get sound analyzer
-        audioAnalyzer = GetComponent<AudioAnalyzer>();
+        audioAnalyzer = FindObjectOfType<AudioAnalyzer>();
 
         // init boids within collider of flock
         boids = new GameObject[flockSize];
@@ -66,9 +74,9 @@ public class FlockController : MonoBehaviour {
         for (var i = 0; i < flockSize; i++)
         {
             Vector3 position = new Vector3(
-                Random.value * collider.bounds.size.x,
-                Random.value * collider.bounds.size.y,
-                Random.value * collider.bounds.size.z
+                UnityEngine.Random.value * collider.bounds.size.x,
+                UnityEngine.Random.value * collider.bounds.size.y,
+                UnityEngine.Random.value * collider.bounds.size.z
             ) - collider.bounds.extents;
 
             GameObject boid = Instantiate(boidPrefab, transform.position, transform.rotation) as GameObject;
@@ -94,12 +102,25 @@ public class FlockController : MonoBehaviour {
         flockVel = velocity / flockSize;
 
         // test change weights with frequency
-        frequencyData = audioAnalyzer.GetFrequencyData();
-        float data = 0;
-        for (int i = 0; i < frequencyData.Length; i++)
+        if (audioAnalyzer != null)
         {
-            data += frequencyData[i];
+            frequencyData = audioAnalyzer.GetFrequencyData();
+            float data = 0;
+            for (int i = 0; i < frequencyData.Length; i++)
+            {
+                data += frequencyData[i];
+            }
+            cohesionWeight = data;
         }
-        cohesionWeight = data;
+    }
+
+    public void onOnbeatDetected(float beatStrength)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void onSpectrum(float[] spectrum)
+    {
+        throw new NotImplementedException();
     }
 }

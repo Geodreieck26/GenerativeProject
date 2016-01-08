@@ -6,11 +6,11 @@ public class Boid : MonoBehaviour
     // the controller the boid belongs to
     private GameObject flockController;
 
-    // initializing variable
-    private bool init = false;
-
     // the corresponding animator
     private Animator anim;
+
+    // counter for updateRate
+    private float currTime = 0.0f;
 
     void Start()
     {
@@ -24,10 +24,11 @@ public class Boid : MonoBehaviour
 
     void Update()
     {
-        if (init)
+        currTime += Time.deltaTime;
+        if (currTime >= flockController.GetComponent<FlockController>().updateRate)
         {
-            InvokeRepeating("Flying", 0, flockController.GetComponent<FlockController>().updateRate);
-            init = false;
+            currTime = 0.0f;
+            Flying();
         }
     }
 
@@ -41,9 +42,17 @@ public class Boid : MonoBehaviour
         Vector3 velocity = GetComponent<Rigidbody>().velocity;
         velocity = velocity + CalculateVel() * Time.deltaTime;
 
+        // clamp forward rotation
+        Vector3 velN = velocity.normalized;
+        if (controller.clampZ)
+        {
+            velN = new Vector3(velN.x / 10.0f, velN.y / 10.0f, Mathf.Clamp(velN.z, 0.4f, 1.0f));
+        }else if (controller.clampX)
+        {
+            velN = new Vector3(Mathf.Clamp(velN.x, 0.4f, 1.0f), velN.y / 10.0f, velN.z / 10.0f);
+        }
         // rotate boid for animation purposes
-        // transform.forward = velocity.normalized;
-        iTween.LookUpdate(gameObject, transform.position+velocity.normalized, controller.updateRate);
+        iTween.LookUpdate(gameObject, transform.position + velN, controller.updateRate);
 
         // clamp boids speed to minimum and maximum
         float speed = velocity.magnitude;
@@ -64,7 +73,7 @@ public class Boid : MonoBehaviour
         FlockController controller = flockController.GetComponent<FlockController>();
 
         // fly towards the centre of mass of all boids
-        Vector3 cohesion = controller.flockCenter;
+        Vector3 cohesion = controller.flockCenter + controller.transform.position;
         cohesion = cohesion - transform.position;
 
         // maintain distance to other boids
@@ -98,8 +107,12 @@ public class Boid : MonoBehaviour
         alignment = alignment - gameObject.GetComponent<Rigidbody>().velocity;
 
         // follow target
-        Vector3 following = controller.target.transform.position;
-        following = following - transform.position;
+        Vector3 following = Vector3.zero;
+        if (controller.target != null)
+        {
+            following = controller.target.transform.position;
+            following = following - transform.position;
+        }
 
         return (cohesion * controller.cohesionWeight + separation * controller.separationWeight + alignment * controller.alignmentWeight + following * controller.followingWeight + bounding * controller.boundingWeight + randomize * controller.randomnessWeight);
     }
@@ -107,11 +120,5 @@ public class Boid : MonoBehaviour
     public void SetController(GameObject flockController)
     {
         this.flockController = flockController;
-        init = true;
-    }
-
-    void OnDisable()
-    {
-        CancelInvoke();
     }
 }
