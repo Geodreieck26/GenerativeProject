@@ -6,8 +6,14 @@ public class CameraScript : MonoBehaviour {
     // Mesh as GameObject.
     private GameObject generatedMesh;
 
+    // Target (car) as GameObject.
+    private GameObject car;
+
     // Mesh of the Scene.
     private Mesh mesh;
+
+    // Startposition of the game object.
+    private Vector3 startPosition;
 
     // Velocity.
     private Vector3 velocity = Vector3.zero;
@@ -57,35 +63,62 @@ public class CameraScript : MonoBehaviour {
     // Vertice which defines the middle of the mesh at this moment.
     private int middleVerticeValue = 0;
 
+    [SerializeField]
+    // X Offset for static camera use.
+    private float xOffset = 1f;
+
+    [SerializeField]
+    // Z Offset for static camera use.
+    private float zOffset = 1f;
+
+    [SerializeField]
+    // X Offset for static camera look at use.
+    private float lookAtXOffset = 1f;
+
+    [SerializeField]
+    // Z Offset for static camera look at use.
+    private float lookAtZOffset = 1f;
+
     /// <summary>
     /// Initialize everything.
     /// </summary>
     void Start () {
-        generatedMesh = GameObject.FindGameObjectWithTag("Mesh");
-        if (generatedMesh != null)
+        startPosition = transform.position;
+        car = GameObject.FindGameObjectWithTag("Car");
+        if (car != null)
         {
-            mesh = generatedMesh.GetComponent<MeshFilter>().mesh;
-            vertices = mesh.vertices;
-            if (vertices != null && vertices.Length != 0)
+            generatedMesh = GameObject.FindGameObjectWithTag("Mesh");
+            if (generatedMesh != null)
             {
-                GetXRowVertices();
-                GetYRowVertices();
+                mesh = generatedMesh.GetComponent<MeshFilter>().mesh;
+                vertices = mesh.vertices;
+                if (vertices != null && vertices.Length != 0)
+                {
+                    GetXRowVertices();
+                    GetYRowVertices();
+                }
+                else
+                {
+                    Debug.Log("**********************No vertices in vertices array found!**********************");
+                }
             }
             else
             {
-                Debug.Log("**********************No vertices in vertices array found!**********************");
+                Debug.Log("**********************No generated Mesh found!**********************");
             }
-        }
-        else
+        } else
         {
-            Debug.Log("**********************No generated Mesh found!**********************");
+            Debug.Log("*********************No car found!********************************");
         }
+
 
         xAxisScale = generatedMesh.transform.localScale.x;
         yAxisScale = generatedMesh.transform.localScale.y;
         zAxisScale = generatedMesh.transform.localScale.z;
 
-        CalculateEverything();
+        CalculateStaticEverything();
+
+        //CalculateEverything();
     }
 
     /// <summary>
@@ -149,10 +182,40 @@ public class CameraScript : MonoBehaviour {
     {
         // Vertice in the middle of the grid.
         middleVerticeValue = (int)(xRowAmount / 2 + vertices.Length / 2);
-        Debug.Log(" row amount middle vertice position: " + vertices[middleVerticeValue].x * xAxisScale + ", " + vertices[middleVerticeValue].y * xAxisScale + ", " + vertices[middleVerticeValue].z * xAxisScale);
+        //Debug.Log(" row amount middle vertice position: " + vertices[middleVerticeValue].x * xAxisScale + ", " + vertices[middleVerticeValue].y * xAxisScale + ", " + vertices[middleVerticeValue].z * xAxisScale);
         //int middleVerticeValue = (int)(xRowAmount / 2 + vertices.Length / 2);
         lookAtPosition = new Vector3(vertices[middleVerticeValue].x * xAxisScale, vertices[middleVerticeValue].y, vertices[middleVerticeValue].z * zAxisScale);
     }
+
+
+    /// <summary>
+    /// Calculate the static target position of the camera movement.
+    /// </summary>
+    void calculateStaticSideSweepTargetPosition()
+    {
+        if (rightenSideView)
+        {
+            targetPosition = new Vector3(startPosition.x, startPosition.y + yOffset, startPosition.z + zOffset * zAxisScale);
+        }
+        else
+        {
+            targetPosition = new Vector3(startPosition.x, startPosition.y + yOffset, startPosition.z - zOffset * zAxisScale);
+        }
+        rightenSideView = !rightenSideView;
+
+        //Debug.Log(targetPosition);
+
+        StartCoroutine(WaitForNextStaticPosition());
+    }
+
+    /// <summary>
+    /// Calculate the static position where the camera should look at.
+    /// </summary>
+    void calculateStaticCameraLookAt()
+    {
+        lookAtPosition = new Vector3(car.transform.position.x, car.transform.position.y, car.transform.position.z);
+    }
+
 
     /*
     /// <summary>
@@ -193,12 +256,31 @@ public class CameraScript : MonoBehaviour {
     }
 
     /// <summary>
-    /// Calculate function for all calculate methods.
+    /// Wait for next static position change of the camera.
+    /// </summary>
+    /// <returns></returns>
+    IEnumerator WaitForNextStaticPosition()
+    {
+        yield return new WaitForSeconds(2f);
+        calculateStaticSideSweepTargetPosition();
+    }
+
+    /// <summary>
+    /// Calculate function for all non-static calculate methods.
     /// </summary>
     void CalculateEverything()
     {
         calculateCameraLookAt();
         calculateTargetPosition();
+    }
+
+    /// <summary>
+    /// Calculate function for all static calculate methods.
+    /// </summary>
+    void CalculateStaticEverything()
+    {
+        calculateStaticCameraLookAt();
+        calculateStaticSideSweepTargetPosition();
     }
 
     void Update()
