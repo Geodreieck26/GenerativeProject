@@ -4,13 +4,14 @@ using System;
 
 [RequireComponent(typeof(BoxCollider))]
 
-public class FlockController : MonoBehaviour, AudioAnalyzer.AudioCallbacks
+public class FlockController : MonoBehaviour
 {
 
     // update rate for the single boids
     [SerializeField]
     [Range(0.0f, 5.0f)]
-    public float updateRate = 0.2f;
+    public float flyUpdateRate = 1.0f;
+    public float colorUpdateRate = 0.4f;
 
     // clamp forward rotation?
     [SerializeField]
@@ -27,7 +28,7 @@ public class FlockController : MonoBehaviour, AudioAnalyzer.AudioCallbacks
     [SerializeField]
     public int flockSize = 100;
     [SerializeField]
-    public int separationRadius = 5;
+    public int pushOutRadius = 5;
     [SerializeField]
     public int boundingOffset = 10;
 
@@ -61,7 +62,8 @@ public class FlockController : MonoBehaviour, AudioAnalyzer.AudioCallbacks
     // sound analyzer
     [SerializeField]
     private AudioAnalyzer audioAnalyzer;
-    private float[] frequencyData;
+    public float[] frequencyData;
+    public float[] averageValues;
 
     void Start()
     {
@@ -89,6 +91,8 @@ public class FlockController : MonoBehaviour, AudioAnalyzer.AudioCallbacks
 
     void Update()
     {
+        averageValues = audioAnalyzer.GetAverageValues();
+
         Vector3 center = Vector3.zero;
         Vector3 velocity = Vector3.zero;
 
@@ -112,15 +116,5 @@ public class FlockController : MonoBehaviour, AudioAnalyzer.AudioCallbacks
             }
             cohesionWeight = data;
         }
-    }
-
-    public void onOnbeatDetected(float beatStrength)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void onSpectrum(float[] spectrum)
-    {
-        throw new NotImplementedException();
     }
 }
