@@ -80,13 +80,25 @@ public class BeatDetection : MonoBehaviour
         int theBeat = isBeat();
 
         if ((theBeat & (int)beatType.kick) != (int)beatType.None)
+        {
             SendEvent(EventType.Kick);
+            Debug.Log("kick");
+        }
         if ((theBeat & (int)beatType.snare) != (int)beatType.None)
+        {
             SendEvent(EventType.Snare);
+            Debug.Log("snare");
+        }
         if ((theBeat & (int)beatType.hithat) != (int)beatType.None)
+        {
             SendEvent(EventType.HitHat);
+            Debug.Log("hihat");
+        }
         if ((theBeat & (int)beatType.energy) != (int)beatType.None)
+        {
             SendEvent(EventType.Energy);
+            Debug.Log("energy");
+        }
     }
 
     void SendEvent(EventType theEvent)

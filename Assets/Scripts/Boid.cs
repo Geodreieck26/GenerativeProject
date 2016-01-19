@@ -13,10 +13,10 @@ public class Boid : MonoBehaviour
     private float currFlyTime = 0.0f;
     private float currColorTime = 0.0f;
 
-    // spectrum index, between 1 and 5
-    private int index = 0;
+    // spectrum/beat index, between 1/0 and 5/2
+    public int index = 0;
     
-    // color change variables
+    // spectrum color change variables
     private Color genColor;
     private Color currColor;
     private float average = 0;
@@ -30,8 +30,14 @@ public class Boid : MonoBehaviour
         // init fly time
         currFlyTime = controller.flyUpdateRate;
 
-        // set index for changing emission color by spectrum
-        index = Random.Range(1, 6);
+        // set index
+        if (controller.beatColor)
+        {
+            index = (int)Random.Range(0, 2.99f);
+        } else
+        {
+            index = (int)Random.Range(1, 5.99f);
+        }
         Debug.Log(index);
         currColor = GetComponentsInChildren<Renderer>()[0].material.GetColor("_EmissionColor");
 
@@ -52,17 +58,24 @@ public class Boid : MonoBehaviour
             Flying();
         }
 
-        currColorTime += Time.deltaTime;
-        float[] averageValues = controller.averageValues;
-        for (int i = 0; i < averageValues.Length; i++)
-        {
-            average += averageValues[i];
-            averageCounter++;
-        }
-        if (currColorTime >= controller.colorUpdateRate)
-        {
-            ChangeColor(average);
-            ResetColorVars();
+        if (!controller.beatColor)
+        { 
+            currColorTime += Time.deltaTime;
+            float[] averageValues = controller.averageValues;
+            for (int i = 0; i < averageValues.Length; i++)
+            {
+                average += averageValues[i];
+                averageCounter++;
+            }
+            if (currColorTime >= controller.colorUpdateRate)
+            {
+                average = average / (averageCounter * 8);
+                if (controller.averageValues[index] > average)
+                {
+                    SpectrumChangeColor();
+                }
+                ResetColorVars();
+            }
         }
     }
 
@@ -78,11 +91,11 @@ public class Boid : MonoBehaviour
 
         // clamp forward rotation
         Vector3 velN = velocity.normalized;
-        if (controller.clampZ)
+        if (controller.clampXY)
         {
             velN = new Vector3(velN.x / 10.0f, velN.y / 10.0f, Mathf.Clamp(velN.z, 0.4f, 1.0f));
         }
-        else if (controller.clampX)
+        else
         {
             velN = new Vector3(Mathf.Clamp(velN.x, 0.4f, 1.0f), velN.y / 10.0f, velN.z / 10.0f);
         }
@@ -158,15 +171,10 @@ public class Boid : MonoBehaviour
     }
 
     //changes the color according to averageValues
-    void ChangeColor(float average)
+    void SpectrumChangeColor()
     {
-        average = average / (averageCounter * 8);
         FlockController controller = flockController.GetComponent<FlockController>();
-
-        if (controller.averageValues[index] > average)
-        {
-            GetComponentsInChildren<Renderer>()[0].material.SetColor("_EmissionColor", controller.colorGenerator.GenColor(1f, 1f));
-        }
+        GetComponentsInChildren<Renderer>()[0].material.SetColor("_EmissionColor", controller.colorGenerator.GenColor(1f, 1f));
     }
 
     // resets the variables needed for color change

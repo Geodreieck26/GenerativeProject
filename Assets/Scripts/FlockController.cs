@@ -13,10 +13,13 @@ public class FlockController : MonoBehaviour
     public float flyUpdateRate = 1.0f;
     public float colorUpdateRate = 0.4f;
 
-    // clamp forward rotation?
+    // clamp xy or yz?
     [SerializeField]
-    public bool clampZ = true;
-    public bool clampX = false;
+    public bool clampXY = true;
+
+    // beat or spectrum color?
+    [SerializeField]
+    public bool beatColor = true;
 
     // flock behaviour and stats variables
     [SerializeField]
@@ -49,6 +52,10 @@ public class FlockController : MonoBehaviour
     // the boid prefab
     [SerializeField]
     public GameObject boidPrefab;
+    public enum BeatIndex
+    {
+        Kick, Snare, Hihat
+    }
 
     // general center and velocity
     public Vector3 flockCenter;
@@ -72,6 +79,7 @@ public class FlockController : MonoBehaviour
         // get sound analyzer & color generator
         audioAnalyzer = FindObjectOfType<AudioAnalyzer>();
         colorGenerator = FindObjectOfType<ColorGenerator>();
+        FindObjectOfType<BeatDetection>().CallBackFunction = BeatCallbackEventHandler;
 
         // init boids within collider of flock
         boids = new GameObject[flockSize];
@@ -118,6 +126,39 @@ public class FlockController : MonoBehaviour
                 data += frequencyData[i];
             }
             cohesionWeight = data;
+        }
+    }
+
+    // handles the beat events
+    public void BeatCallbackEventHandler(BeatDetection.EventInfo eventInfo)
+    {
+        switch (eventInfo.messageInfo)
+        {
+            case BeatDetection.EventType.Energy:
+                break;
+            case BeatDetection.EventType.HitHat:
+                BeatChangeColor(BeatIndex.Hihat);
+                break;
+            case BeatDetection.EventType.Kick:
+                BeatChangeColor(BeatIndex.Kick);
+                break;
+            case BeatDetection.EventType.Snare:
+                BeatChangeColor(BeatIndex.Snare);
+                break;
+        }
+    }
+
+    //changes the color according to averageValues
+    void BeatChangeColor(BeatIndex index)
+    {
+        if (beatColor)
+        {
+            Color color = colorGenerator.GenColor(1f, 1f);
+            foreach (GameObject boid in boids)
+            {
+                if(boid.GetComponent<Boid>().index == (int)index)
+                    boid.GetComponentsInChildren<Renderer>()[0].material.SetColor("_EmissionColor", color);
+            }
         }
     }
 }
