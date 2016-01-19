@@ -15,50 +15,54 @@ public class Boid : MonoBehaviour
 
     // spectrum index, between 1 and 5
     private int index = 0;
-
-    private Color[] colorArray = new Color[] { Color.blue, Color.green, Color.red, Color.white, Color.yellow, Color.cyan, Color.magenta };
-    private int colorCounter = 0;
+    
+    // color change variables
+    private Color genColor;
+    private Color currColor;
     private float average = 0;
     private int averageCounter = 0;
 
     void Start()
     {
         iTween.Init(gameObject);
-        currFlyTime = flockController.GetComponent<FlockController>().flyUpdateRate;
+        FlockController controller = flockController.GetComponent<FlockController>();
 
-        //set index for changing emission color by spectrum
+        // init fly time
+        currFlyTime = controller.flyUpdateRate;
+
+        // set index for changing emission color by spectrum
         index = Random.Range(1, 6);
         Debug.Log(index);
+        currColor = GetComponentsInChildren<Renderer>()[0].material.GetColor("_EmissionColor");
 
         // set animation
         anim = GetComponent<Animator>();
-        float random = Random.Range(-flockController.GetComponent<FlockController>().animOffset, flockController.GetComponent<FlockController>().animOffset);
+        float random = Random.Range(-controller.animOffset, controller.animOffset);
         anim.speed = anim.speed + random;
     }
 
     void Update()
     {
+        FlockController controller = flockController.GetComponent<FlockController>();
+
         currFlyTime += Time.deltaTime;
-        if (currFlyTime >= flockController.GetComponent<FlockController>().flyUpdateRate)
+        if (currFlyTime >= controller.flyUpdateRate)
         {
             currFlyTime = 0.0f;
             Flying();
         }
 
         currColorTime += Time.deltaTime;
-        float[] averageValues = flockController.GetComponent<FlockController>().averageValues;
-        for(int i = 0; i < averageValues.Length; i++)
+        float[] averageValues = controller.averageValues;
+        for (int i = 0; i < averageValues.Length; i++)
         {
             average += averageValues[i];
             averageCounter++;
         }
-        if(currColorTime >= flockController.GetComponent<FlockController>().colorUpdateRate)
+        if (currColorTime >= controller.colorUpdateRate)
         {
-            currColorTime = 0.0f;
-            average = average / (averageCounter * 8);
-            changeColor(average);
-            average = 0.0f;
-            averageCounter = 0;
+            ChangeColor(average);
+            ResetColorVars();
         }
     }
 
@@ -77,7 +81,8 @@ public class Boid : MonoBehaviour
         if (controller.clampZ)
         {
             velN = new Vector3(velN.x / 10.0f, velN.y / 10.0f, Mathf.Clamp(velN.z, 0.4f, 1.0f));
-        }else if (controller.clampX)
+        }
+        else if (controller.clampX)
         {
             velN = new Vector3(Mathf.Clamp(velN.x, 0.4f, 1.0f), velN.y / 10.0f, velN.z / 10.0f);
         }
@@ -153,16 +158,22 @@ public class Boid : MonoBehaviour
     }
 
     //changes the color according to averageValues
-    void changeColor(float average)
+    void ChangeColor(float average)
     {
-        if (flockController.GetComponent<FlockController>().averageValues[index] > average)
-        {
-            GetComponentsInChildren<Renderer>()[0].material.SetColor("_EmissionColor", colorArray[colorCounter]);
+        average = average / (averageCounter * 8);
+        FlockController controller = flockController.GetComponent<FlockController>();
 
-            if (colorCounter < colorArray.Length-1)
-                colorCounter++;
-            else
-                colorCounter = 0;
+        if (controller.averageValues[index] > average)
+        {
+            GetComponentsInChildren<Renderer>()[0].material.SetColor("_EmissionColor", controller.colorGenerator.GenColor(1f, 1f));
         }
+    }
+
+    // resets the variables needed for color change
+    void ResetColorVars()
+    {
+        average = 0.0f;
+        averageCounter = 0;
+        currColorTime = 0.0f;
     }
 }

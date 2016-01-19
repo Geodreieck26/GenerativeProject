@@ -59,16 +59,19 @@ public class FlockController : MonoBehaviour
     [SerializeField]
     public float animOffset = 0.4f;
 
-    // sound analyzer
-    [SerializeField]
+    // sound analyzer script
     private AudioAnalyzer audioAnalyzer;
     public float[] frequencyData;
     public float[] averageValues;
 
+    // color generator script
+    public ColorGenerator colorGenerator;
+
     void Start()
     {
-        // get sound analyzer
+        // get sound analyzer & color generator
         audioAnalyzer = FindObjectOfType<AudioAnalyzer>();
+        colorGenerator = FindObjectOfType<ColorGenerator>();
 
         // init boids within collider of flock
         boids = new GameObject[flockSize];
