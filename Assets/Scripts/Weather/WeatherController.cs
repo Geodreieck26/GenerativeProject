@@ -6,8 +6,8 @@ using System.Collections;
 public class WeatherController : MonoBehaviour {
 
 	public AudioAnalyzer analyzer;
+	public GameObject Lightningpref;
 
-	private LightningMaker lightning;
 	private Vector3 lightningPosition;
 
 	public Vector3 LightningPosition {
@@ -32,7 +32,6 @@ public class WeatherController : MonoBehaviour {
 
 	private float weatherHeight = 3f;
 
-
 	// Use this for initialization
 	void Start () {
 
@@ -43,22 +42,16 @@ public class WeatherController : MonoBehaviour {
 		mesh = actualMesh.GetComponent<MeshFilter>().mesh;
 		vertices = mesh.vertices; 
 
-		lightning = GetComponent<LightningMaker> ();
-	
 	}
 	
 	// Update is called once per frame
 	void Update () {
-
 		frequencies = analyzer.GetFrequencyData ();
-		generateLightnings ();
 	
 	}
 
 	void generateLightnings () {
-
-		lightningPosition = new Vector3(Random.Range (3,-3),weatherHeight,Random.Range(3,-3));
-
+		Destroy(Instantiate (Lightningpref, this.transform.position, Quaternion.identity) as GameObject, 0.3f);
 	}
 
 	public void onOnbeatDetected (float beatStrength) {
