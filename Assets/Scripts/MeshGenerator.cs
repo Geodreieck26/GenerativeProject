@@ -4,11 +4,13 @@ using System.Collections.Generic;
 
 [RequireComponent(typeof(MeshRenderer))]
 [RequireComponent(typeof(MeshFilter))]
+[RequireComponent(typeof(Pool))]
 
-
-public class MeshGenerator : MonoBehaviour, AudioAnalyzer.AudioCallbacks{
+public class MeshGenerator : MonoBehaviour
+{
 
     public AudioAnalyzer audioAnalyzer;
+    private Pool pool;
     //private Camera mainCamera;
 
     private Queue<ObjectTypes> currentObjects;
@@ -20,17 +22,29 @@ public class MeshGenerator : MonoBehaviour, AudioAnalyzer.AudioCallbacks{
 
     private enum ObjectTypes
     {
-        SimpleRow, BuildingRow 
-    } 
+        SimpleRow, Crossing
+    }
+
+    private enum Sector
+    {
+        Building, Crossing
+    }
+
 
 
     private MeshRenderer meshRenderer;
     private MeshFilter meshFilter;
     private Mesh mesh;
     private List<Vector3> vertices;
-    private List<int> indices;
+    //private List<int> indices;
     private List<Vector2> uvs;
     //private List<Vector3> normals;
+
+
+
+    private float[] currentFrequencyData;
+    private int[] prevRowIndices;
+
 
     private float xStep;
     private float zStep;
@@ -64,13 +78,101 @@ public class MeshGenerator : MonoBehaviour, AudioAnalyzer.AudioCallbacks{
     private int beatCounter = 0;
 
     private int breakCount = 0;
+
+    [Range(0.05f, 5.0f)]
     public float velocity;
+
+    [Range(0.05f, 1.0f)]
     public float updateRate;
     private float currentTime;
-    // Use this for initialization
-    void Awake () {
 
+    private int rowsAdded = 0;
+
+    private bool firstCall;
+
+
+    public int[] indicesLine;
+    public int[] subMesh;
+
+    private int waitCycles = 0;
+
+    private int half;
+
+
+    public int allowedRowCount;
+
+    public float buildingWidth;
+
+    public int streetWidth;
+
+    private List<int>[] indices;
+    //private List<int> s1;
+
+    public GameObject buidlingTemplate;
+    private GameObject[] buildings;
+
+
+    public List<GameObject> objectsToMove;
+
+    public Material[] mats;
+
+    private float pointOfDoom;
+
+    public Vector3 buildingScale;
+
+    private bool once;
+
+    private bool[] instruction;
+
+    private int amountOfBuildings;
+
+
+    public float[] propability;
+
+    private ColorGenerator colorGen;
+
+    public Material[] buildingMaterials;
+
+    public int crossingWidth;
+    public int crossingRows;
+    public bool crossing;
+    private bool oldSidewalk = true;
+
+    [SerializeField]
+    private int[]sectorProbabilty;
+
+    [SerializeField]
+    private float[] realSectorProbability;
+    //public int CrossingSector;
+    private int sum;
+
+    [SerializeField]
+    private Sector currentSector;
+
+
+    [SerializeField]
+    private float sectorCooldown;
+
+
+   
+    public float currentCooldown;
+
+
+
+    // Use this for initialization
+    void Awake()
+    {
+        //sectorProbabilty = new int[3];
+        currentSector = Sector.Building;
+        realSectorProbability = new float[sectorProbabilty.Length];
+       
+        amountOfBuildings = 6;
+
+        pool = GetComponent<Pool>();
+        firstCall = true;
         currentObjects = new Queue<ObjectTypes>();
+
+        currentFrequencyData = new float[0];
 
         currentTime = 0.0f;
         //mainCamera = Camera.main;
@@ -80,10 +182,13 @@ public class MeshGenerator : MonoBehaviour, AudioAnalyzer.AudioCallbacks{
         meshFilter = GetComponent<MeshFilter>();
 
         audioAnalyzer = FindObjectOfType<AudioAnalyzer>();
-        //audioAnalyzer.addAudioCallback(this);
+
 
         vertices = new List<Vector3>();
-        indices = new List<int>();
+        indices = new List<int>[2];
+        indices[0] = new List<int>();
+        indices[1] = new List<int>();
+
         uvs = new List<Vector2>();
         //normals = new List<Vector3>();
 
@@ -91,8 +196,8 @@ public class MeshGenerator : MonoBehaviour, AudioAnalyzer.AudioCallbacks{
         uv = new Vector2();
         //normal = new Vector3();
 
-        xStep = 1.0f / (xVertices-1);
-        zStep = 1.0f / (zVertices-1);
+        xStep = 1.0f / (xVertices - 1);
+        zStep = 1.0f / (zVertices - 1);
 
         //sampleStep = audioAnalyzer.Samples/zVertices;
         frequencyData = new float[0];
@@ -100,163 +205,47 @@ public class MeshGenerator : MonoBehaviour, AudioAnalyzer.AudioCallbacks{
         moduloCounter = 1;
 
 
-        GenerateBaseMesh();
 
-        //Invoke("BPM",10);
+        indicesLine = new int[zVertices];
+        subMesh = new int[zVertices];
 
 
         expandMesh = true;
-	    
-	}
 
-    private void GenerateBaseMesh()
-    {
-        int mod = 0;
-        int current = 0;
-        for(int i = 0; i < xVertices; i++)
-        {
-            current = 0;
-            for(int j = 0; j < zVertices; j++)
-            {
-                mod = j % 5;
-                if (mod == 0 || mod == 1)
-                {
-                    vertex.Set(xStep * i, 0, zStep * current);
-                    current++;
-                }
-                else if(mod == 2 || mod == 3)
-                {
-                    vertex.Set(xStep * i, 1, zStep * (current-1));
-                    current++;
-                }
-                else
-                {
-                    vertex.Set(xStep * i, 0, zStep * (current-2));
-                    current-=2;                
-                }
-               
-                vertices.Add(vertex);
+        //buildings = new GameObject[50];
 
-                if(j!= zVertices-1 && i!= xVertices-1)
-                {
-                    indices.Add(((i + 1) * (zVertices)) + j);
-                    indices.Add((i * (zVertices)) + j);
-                    indices.Add((i * (zVertices)) + j + 1);
-                } 
+        //for (int i = 0; i < buildings.Length; i++)
+        //{
+        //    buildings[i] = Instantiate(buidlingTemplate, Vector3.zero, Quaternion.identity) as GameObject;
+        //}
 
-                if(i != 0 && j != 0)
-                {
-                    indices.Add((i * (zVertices)) + j);
-                    indices.Add((i * (zVertices)) + j - 1);
-                    indices.Add(((i - 1) * (zVertices)) + j);
-                }
-                uv.Set(xStep * i, zStep * j);
-                uvs.Add(uv);
-            }
-        }
+        mesh.subMeshCount = 2;
+        meshRenderer.materials = mats;
 
-
-        mesh.SetVertices(vertices);
-        mesh.SetIndices(indices.ToArray(), meshTopolgy, 0);
-        mesh.SetUVs(0, uvs);
         meshFilter.mesh = mesh;
-        mesh.RecalculateBounds();
-        mesh.RecalculateNormals();
-        meshRenderer.material = material;
 
-        xCurSize = xVertices;
-        zCurSize = zVertices;
+        objectsToMove = new List<GameObject>();
+
+        colorGen = Camera.main.GetComponent<ColorGenerator>();
 
 
     }
+
+
 
 
     private void RemoveStructure()
     {
         ObjectTypes type = currentObjects.Dequeue();
 
-        if(type == ObjectTypes.SimpleRow)
+        if (type == ObjectTypes.SimpleRow)
         {
-            RemoveRow();
+            RemoveRow(1);
         }
-
-
-
-
-    }
-
-    void AddHouseBlockRow()
-    {
-        float[] tempFrequencyData = audioAnalyzer.GetFrequencyData();
-        int mod = 0;
-        int current = 0;
-
-        for (int i = 0; i < zCurSize; i++)
+        if (type == ObjectTypes.Crossing)
         {
-            //vertex.Set(xStep*(xCurSize), 0, zStep*i);
-
-            mod = i % 5;
-            if (mod == 0 || mod == 1)
-            {
-                vertex.Set(xStep * (xCurSize), 0, zStep * current);
-                current++;
-            }
-            else if (mod == 2 || mod == 3)
-            {
-                vertex.Set(xStep * (xCurSize), 1, zStep * (current - 1));
-                current++;
-            }
-            else
-            {
-                vertex.Set(xStep * (xCurSize), 0, zStep * (current - 2));
-                current -= 2;
-            }
-
-            vertices.Add(vertex);
-
-
-            if (i != zCurSize - 1)
-            {
-                indices.Add(((xCurSize - 1) * (zVertices)) + i);
-                indices.Add(((xCurSize - 2) * (zVertices)) + i);
-                indices.Add(((xCurSize - 2) * (zVertices)) + i + 1);
-            }
-
-            if (i != 0)
-            {
-                indices.Add(((xCurSize - 1) * (zVertices)) + i);
-                indices.Add(((xCurSize - 1) * (zVertices)) + i - 1);
-                indices.Add(((xCurSize - 2) * (zVertices)) + i);
-            }
-
-            uv.Set(xStep * xCurSize, zStep * i);
-            uvs.Add(uv);
+            RemoveRow(2);
         }
-
-        OffsetVertices(vertices.Count - zCurSize, vertices.Count - 1);
-
-        mesh.Clear();
-        mesh.SetVertices(vertices);
-        mesh.SetIndices(indices.ToArray(), meshTopolgy, 0);
-        mesh.SetUVs(0, uvs);
-
-        mesh.RecalculateBounds();
-        mesh.RecalculateNormals();
-
-        meshFilter.mesh = mesh;
-
-        for (int i = 0; i < vertices.Count; i++)
-        {
-            vertex.Set(vertices[i].x - xStep, vertices[i].y, vertices[i].z);
-            vertices[i] = vertex;
-
-            uv.Set(uvs[i].x - xStep, uvs[i].y);
-            uvs[i] = uv;
-        }
-
-  
-
-
 
     }
 
@@ -265,13 +254,9 @@ public class MeshGenerator : MonoBehaviour, AudioAnalyzer.AudioCallbacks{
     {
         for (int i = 0; i < vertices.Count; i++)
         {
-            vertex.Set(vertices[i].x - velocity*Time.deltaTime, vertices[i].y, vertices[i].z);
+
+            vertex.Set(vertices[i].x - velocity * Time.deltaTime, vertices[i].y, vertices[i].z);
             vertices[i] = vertex;
-
-            //uv.Set(uvs[i].x - xStep, uvs[i].y);
-            //uvs[i] = uv;
-
-
         }
         mesh.SetVertices(vertices);
         mesh.RecalculateBounds();
@@ -281,155 +266,649 @@ public class MeshGenerator : MonoBehaviour, AudioAnalyzer.AudioCallbacks{
     }
 
 
-    void AddRow()
-    {            
-        int mod = 0;
-        int current = 0;
 
-        for (int i = 0; i <zCurSize; i++)
+
+
+
+    private void OffsetHeight(int[] indicesLine, bool sideWalk)
+    {
+        int streetVerts = 2;
+        int half = indicesLine.Length / 2;
+        for (int i = 0; i < indicesLine.Length; i++)
         {
-            mod = i % 5;
-            if (mod == 0 || mod == 1)
+            if (i < half - streetVerts || i > half + streetVerts)
             {
-                vertex.Set(xStep * (xCurSize), 0, zStep * current);
-                current++;
+                if (sideWalk)
+                {
+                    vertex.Set(vertices[indicesLine[i]].x, vertices[indicesLine[i]].y + 20, vertices[indicesLine[i]].z);
+                }
+                else
+                {
+                    vertex = vertices[indicesLine[i]];
+                }
+                
+                vertices[indicesLine[i]] = vertex;
             }
-            else if (mod == 2 || mod == 3)
+            else if (i == half - streetVerts)
             {
-                vertex.Set(xStep * (xCurSize), 1, zStep * (current - 1));
-                current++;
+                vertex.Set(vertices[indicesLine[i]].x, vertices[indicesLine[i]].y, vertices[indicesLine[i - 1]].z);
+                vertices[indicesLine[i]] = vertex;
+            }
+            else if (i == half + streetVerts)
+            {
+                vertex.Set(vertices[indicesLine[i]].x, vertices[indicesLine[i]].y, vertices[indicesLine[i + 1]].z);
+                vertices[indicesLine[i]] = vertex;
+            }
+        }
+    }
+
+
+    void OffsetZVertices(int[] indicesLine)
+    {
+        int verts = 5;
+        half = zVertices / 2;
+        float prevZleft = 0;
+        float nextZright = 0;
+
+        float tmp = 0;
+
+
+        for (int i = 0; i < half; i++)
+        {
+
+            if (i == 0)
+            {
+                prevZleft = vertices[indicesLine[0]].z;
+                nextZright = vertices[zVertices - 1].z;
+            }
+
+            if (i % verts == 1)
+            {
+
+                tmp = vertices[indicesLine[i]].z;
+                vertex.Set(vertices[indicesLine[i]].x, vertices[indicesLine[i]].y, prevZleft);
+                vertices[indicesLine[i]] = vertex;
+                prevZleft = tmp;
+
+
+                tmp = vertices[indicesLine[zVertices - 1 - i]].z;
+                vertex.Set(vertices[indicesLine[zVertices - 1 - i]].x, vertices[indicesLine[zVertices - 1 - i]].y, nextZright);
+                vertices[indicesLine[zVertices - 1 - i]] = vertex;
+                nextZright = tmp;
+
+            }
+            else if (i % verts == 2)
+            {
+
+                tmp = vertices[indicesLine[i]].z;
+                vertex.Set(vertices[indicesLine[i]].x, vertices[indicesLine[i]].y, tmp);
+                vertices[indicesLine[i]] = vertex;
+                prevZleft = tmp;
+
+
+                tmp = vertices[indicesLine[zVertices - 1 - i]].z;
+                vertex.Set(vertices[indicesLine[zVertices - 1 - i]].x, vertices[indicesLine[zVertices - 1 - i]].y, tmp);
+                vertices[indicesLine[zVertices - 1 - i]] = vertex;
+                nextZright = tmp;
+
+
+
+            }
+            else if (i % verts == 3 || i % verts == 4)
+            {
+                tmp = vertices[indicesLine[i]].z;
+                vertex.Set(vertices[indicesLine[i]].x, vertices[indicesLine[i]].y, prevZleft);
+                vertices[indicesLine[i]] = vertex;
+                prevZleft = tmp;
+
+
+                tmp = vertices[indicesLine[zVertices - 1 - i]].z;
+                vertex.Set(vertices[indicesLine[zVertices - 1 - i]].x, vertices[indicesLine[zVertices - 1 - i]].y, nextZright);
+                vertices[indicesLine[zVertices - 1 - i]] = vertex;
+                nextZright = tmp;
+            }
+
+
+
+            else
+            {
+                prevZleft = vertices[indicesLine[i]].z;
+                nextZright = vertices[indicesLine[zVertices - 1 - i]].z;
+            }
+
+
+            if (i == half - 1)
+            {
+                vertices[indicesLine[i]].Set(vertices[indicesLine[i]].x, vertices[indicesLine[i]].y, 0);
+            }
+
+
+        }
+
+
+        vertex.Set(vertices[indicesLine[half]].x, 0, vertices[indicesLine[half]].z);
+        vertices[indicesLine[half]] = vertex;
+
+
+    }
+
+
+
+    private void CrossingStart()
+    {
+        //AddBasicRow();
+        AddBasicRow(indicesLine, 0, true, false, true);
+        AddBasicRow(indicesLine, 0, true, true, false);
+
+
+
+    }
+
+    private void CrossingEnd()
+    {
+
+        AddBasicRow(indicesLine, 0, true, true, false);
+        AddBasicRow(indicesLine, 0, true, true, true);
+
+    }
+
+
+
+
+    private void PlaceBuidlingRow(bool[] instructions)
+    {
+        frequencyData = audioAnalyzer.GetFrequencyData();
+        int steps = indicesLine.Length / 6;
+        int half = indicesLine.Length / 2;
+        Material[] tempMats = new Material[2];
+        float z;
+        GameObject go;
+        Vector3 pos = new Vector3();
+        Vector3 scale = new Vector3();
+        Debug.Log("place buildings");
+        MeshRenderer mr;
+        for (int i = 0; i < 3; i++)
+        {
+            if (instructions[i])
+            {
+                go = pool.getPooledObject();
+                go.SetActive(true);
+
+                mr = go.GetComponent<MeshRenderer>();
+                tempMats[0] = mr.materials[0];
+                tempMats[1] = buildingMaterials[1];
+                mr.materials = tempMats;
+
+                if (!once)
+                {
+                    buildingScale = go.transform.localScale;
+                }
+
+                z = frequencyData[i];
+
+                scale.Set(go.transform.localScale.x, go.transform.localScale.y, go.transform.localScale.z * ((i * 0.3f) + z * 3 + 0.2f));
+
+
+                go.transform.localScale = Vector3.zero;
+
+                iTween.ScaleTo(go.gameObject, iTween.Hash("scale", scale, "time", 0.05f, "easetype", iTween.EaseType.linear));
+
+                pos = vertices[indicesLine[half - (steps * (i + 1))]];
+                pos.z -= zStep * 2;
+                pos = transform.TransformPoint(pos);
+                go.transform.position = pos;
+                //go.transform.localScale = scale;
+                objectsToMove.Add(go);
+            }
+
+            if (instructions[amountOfBuildings - 1 - i])
+            {
+
+                z = frequencyData[i + 3];
+
+
+                go = pool.getPooledObject();
+                go.SetActive(true);
+
+                mr = go.GetComponent<MeshRenderer>();
+                mr.materials[1] = buildingMaterials[1];
+
+                scale.Set(go.transform.localScale.x, go.transform.localScale.y, go.transform.localScale.z * ((i * 0.3f) + z * 3 + 0.2f));
+
+                go.transform.localScale = Vector3.zero;
+
+                iTween.ScaleTo(go.gameObject, iTween.Hash("scale", scale, "time", 0.05f, "easetype", iTween.EaseType.linear));
+
+                pos = vertices[indicesLine[half + (steps * (i + 1))]];
+                pos.z += zStep * 2;
+                pos = transform.TransformPoint(pos);
+
+                go.transform.position = pos;
+                //go.transform.localScale = scale;
+                objectsToMove.Add(go);
+            }
+        }
+
+    }
+
+
+
+
+
+    private bool Propability(float threshold)
+    {
+        if (Random.value < threshold)
+        {
+            return true;
+        }
+        return false;
+    }
+
+
+
+    private bool[] GenerateAssembleInstruction()
+    {
+        instruction = new bool[amountOfBuildings];
+
+        for (int i = 0; i < amountOfBuildings / 2; i++)
+        {
+            instruction[i] = Propability(propability[i]);
+            instruction[amountOfBuildings - 1 - i] = Propability(propability[i]);
+        }
+        return instruction;
+    }
+
+
+
+
+    void AddBasicRow(int[] indicesLine, int offset, bool addToQueue, bool shiftRow, bool sideWalk)
+    {
+        List<int> indexList = new List<int>();
+        bool sidewalkChange = false;
+        if (oldSidewalk!= sideWalk)
+        {
+            sidewalkChange = true;
+        }
+
+        bool firstLine = false;
+        if (firstCall)
+        {
+            firstCall = false;
+            firstLine = true;
+        }
+
+        int half = zVertices / 2;
+        int streetverts = 3;
+
+        for (int i = 0; i < zVertices; i++)
+        {
+            if (!shiftRow)
+            {
+                vertex.Set(1 + (buildingWidth * offset), 0, zStep * i);
             }
             else
             {
-                vertex.Set(xStep * (xCurSize), 0, zStep * (current - 2));
-                current -= 2;
+                vertex.Set(vertices[indicesLine[i]].x,0,vertices[indicesLine[i]].z);
             }
 
             vertices.Add(vertex);
-
-
-            if (i!= zCurSize - 1)
+            int currentIndex = vertices.Count - 1;
+            if (!firstLine)
             {
-                indices.Add(((xCurSize  - 1) * (zVertices)) + i);
-                indices.Add(((xCurSize  - 2) * (zVertices)) + i);
-                indices.Add(((xCurSize  - 2) * (zVertices)) + i + 1);
-            }
+                if (i != zVertices - 1)
+                {
+                    indexList.Add(currentIndex);
+                    indexList.Add(indicesLine[i]);
+                    indexList.Add(indicesLine[i + 1]);
+                }
+                if (i != 0)
+                {
 
-            if (i != 0 )
-            {
-                indices.Add(((xCurSize  - 1) * (zVertices)) + i);
-                indices.Add(((xCurSize  - 1) * (zVertices)) + i - 1);
-                indices.Add(((xCurSize  - 2) * (zVertices)) + i);
+                    indexList.Add(currentIndex);
+                    indexList.Add(currentIndex - 1);
+                    indexList.Add(indicesLine[i]);
+                }
             }
-
-            uv.Set(xStep*xCurSize, zStep * i);
-            uvs.Add(uv);
         }
 
-        OffsetVertices(vertices.Count-zCurSize,vertices.Count-1);
+        int tmp = vertices.Count - 1;
+        for (int i = zVertices - 1; i >= 0; i--)
+        {
+            indicesLine[zVertices - 1 - i] = tmp - i;
+        }
+
+      
+            OffsetHeight(indicesLine, sideWalk);
+   
+
+
+
+        for (int i = 0; i < indexList.Count / 3; i++)
+        {
+            if (!sidewalkChange)
+            {
+                if (i != (half + streetverts) * 2 && i != (half + streetverts - 1) * 2 - 1 && i != (half - streetverts) * 2 - 1 && i != (half - streetverts + 1) * 2)
+                {
+                    indices[0].Add(indexList[i * 3]);
+                    indices[0].Add(indexList[(i * 3) + 1]);
+                    indices[0].Add(indexList[(i * 3) + 2]);
+                }
+                else
+                {
+                    if (sideWalk)
+                    {
+                        indices[1].Add(indexList[i * 3]);
+                        indices[1].Add(indexList[(i * 3) + 1]);
+                        indices[1].Add(indexList[(i * 3) + 2]);
+                    }
+                    else
+                    {
+                        indices[0].Add(indexList[i * 3]);
+                        indices[0].Add(indexList[(i * 3) + 1]);
+                        indices[0].Add(indexList[(i * 3) + 2]);
+                    }
+
+                }
+            }
+            else
+            {
+                Debug.Log("entered");
+                // if (i != (half + streetverts) * 2 && i != (half + streetverts - 1) * 2 - 1 && i != (half - streetverts) * 2 - 1 && i != (half - streetverts + 1) * 2)
+                {
+                    indices[1].Add(indexList[i * 3]);
+                    indices[1].Add(indexList[(i * 3) + 1]);
+                    indices[1].Add(indexList[(i * 3) + 2]);
+                }
+                //else
+                //{
+                //    if (sideWalk)
+                //    {
+                //        indices[1].Add(indexList[i * 3]);
+                //        indices[1].Add(indexList[(i * 3) + 1]);
+                //        indices[1].Add(indexList[(i * 3) + 2]);
+                //    }
+                //    else
+                //    {
+                //        indices[0].Add(indexList[i * 3]);
+                //        indices[0].Add(indexList[(i * 3) + 1]);
+                //        indices[0].Add(indexList[(i * 3) + 2]);
+                //    }
+
+                //}
+
+
+
+            }
+           
+        }
+
+        if (addToQueue)
+        {
+            //mesh.Clear();
+            //mesh.subMeshCount = 2;
+            mesh.SetVertices(vertices);
+            for (int i = 0; i < indices.Length; i++)
+            {
+                mesh.SetIndices(indices[i].ToArray(), meshTopolgy, i);
+            }
+            //mesh.SetIndices(indices.ToArray(), meshTopolgy, 0);
+
+
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+
+            meshFilter.mesh = mesh;
+            meshRenderer.materials = mats;
+            currentObjects.Enqueue(ObjectTypes.SimpleRow);
+            rowsAdded++;
+        }
+
+
+        oldSidewalk = sideWalk;
+    }
+
+
+
+    private void DetermineSector()
+    {
+        
+        if (currentCooldown <= 0)
+        {
+            currentCooldown = Random.Range(3, 5);
+
+
+            sum = 0;
+            for (int i = 0; i < sectorProbabilty.Length; i++)
+            {
+                sum += sectorProbabilty[i];
+            }
+
+            for (int i = 0; i < sectorProbabilty.Length; i++)
+            {
+                realSectorProbability[i] = sectorProbabilty[i]/(float)sum;
+            }
+            int chosenSector = -1;
+
+            float start = 0.0f;
+
+
+            
+            float rand = Random.Range(0.0f, 1.0f);
+            Debug.Log(rand);
+           
+            for(int i = 0; i < realSectorProbability.Length; i++)
+            {
+                //if(start <= rand && start+realSectorProbability[i] >= rand)
+                if (rand > start)
+                {                    
+                    chosenSector++;
+                    start  = start+ realSectorProbability[i];
+                    Debug.Log("chosen: " + chosenSector);
+
+                }else
+                {
+                   // chosenSector = 1;
+                }
+            }
+
+            if (chosenSector == 0)
+            {
+                currentSector = Sector.Building;
+            }
+            else if (chosenSector == 1)
+            {
+                currentSector = Sector.Crossing;
+
+            }
+        }
+        
+
+       
+
+
+
+    }
+
+
+
+
+
+    void RemoveRow(int rows)
+    {
+        pointOfDoom = vertices[0].x;
+        vertices.RemoveRange(0, (zVertices * rows));
+        CorrectIndices(zVertices * rows);
+        CorrectIndexLine(zVertices * rows);
 
         mesh.Clear();
+        mesh.subMeshCount = 2;
         mesh.SetVertices(vertices);
-        mesh.SetIndices(indices.ToArray(), meshTopolgy, 0);
-        mesh.SetUVs(0, uvs);
+        for (int i = 0; i < indices.Length; i++)
+        {
+            mesh.SetIndices(indices[i].ToArray(), MeshTopology.Triangles, i);
+        }
 
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
-
         meshFilter.mesh = mesh;
-
-        currentObjects.Enqueue(ObjectTypes.SimpleRow);
-        RemoveStructure();
-
-
     }
 
 
 
-
-  
-
-
-
-
-    void RemoveRow()
-    {      
-        vertices.RemoveRange(0, zVertices);
-        uvs.RemoveRange(0, zVertices);      
-        CorrectIndices(zVertices);
-
-        mesh.Clear();
-        mesh.SetVertices(vertices);
-
-        mesh.SetIndices(indices.ToArray(), meshTopolgy, 0);
-        mesh.SetUVs(0, uvs);
-
-        mesh.RecalculateBounds();
-        mesh.RecalculateNormals();
-
-        meshFilter.mesh = mesh;        
-    }
 
 
     void CorrectIndices(int amount)
     {
-        int counter = 0;
-        for (int i = 0; i<indices.Count; i+=3)
+        for (int submesh = 0; submesh < indices.Length; submesh++)
         {
-            counter++;
-            indices[i] -= amount;            
-            indices[i + 1] -= amount;
-            indices[i + 2] -= amount;            
-            if (indices[i] < 0 || indices[i + 1] < 0 || indices[i + 2] < 0)
-            {             
-                indices.RemoveRange(i, 3);
-                i -= 3;
+            for (int i = 0; i < indices[submesh].Count; i += 3)
+            {
+                indices[submesh][i] -= amount;
+                indices[submesh][i + 1] -= amount;
+                indices[submesh][i + 2] -= amount;
+                if (indices[submesh][i] < 0 || indices[submesh][i + 1] < 0 || indices[submesh][i + 2] < 0)
+                {
+                    indices[submesh].RemoveRange(i, 3);
+                    i -= 3;
+                }
             }
         }
-        
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+
+    void CorrectIndexLine(int amount)
+    {
+        for (int i = 0; i < indicesLine.Length; i++)
+        {
+            indicesLine[i] -= amount;
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
         if (expandMesh)
         {
+           
+        
+
+            currentCooldown -= Time.deltaTime;
+            
             currentTime += Time.deltaTime;
-            if(currentTime>= updateRate)
+            if (currentTime >= updateRate)
             {
                 currentTime = 0;
-                AddRow();
-                
+                if (waitCycles <= 0)
+                {
+                    DetermineSector();
+                    if (currentSector == Sector.Building)
+                    {
+                        if (crossing)
+                        {
+                            crossing = false;
+                            CrossingEnd();
+                        }
+                        else
+                        {
+                            AddBasicRow(indicesLine, 0, true, false, true);
+
+                            if (Propability(0.7f))
+                            {
+                                PlaceBuidlingRow(GenerateAssembleInstruction());
+                            }
+                        }
+
+                        
+                        
+                    }
+                    else if(currentSector == Sector.Crossing)
+                    {
+
+                        if (!crossing)
+                        {
+                            crossing = true;                         
+                            CrossingStart();
+                        }
+                        else
+                        {
+
+                            AddBasicRow(indicesLine, 0, true, false, false);
+
+                        }
+
+                        
+
+                        
+                       
+                        //AddBasicRow(indicesLine, 0, true, false, false);
+                    }
+                    
+                   
+
+
+
+                    if (rowsAdded > allowedRowCount)
+                    {
+                        RemoveStructure();
+                    }
+
+                }
+                else
+                {
+                    waitCycles--;
+                }
             }
-            //InvokeRepeating("AddRow", 0, updateMesh);
-            //InvokeRepeating("AddRow", 0, updateMesh);
-            //addRow();
+            MoveObjects();
             MoveMesh();
         }
-	}
+    }
+
+
+
+    private void MoveObjects()
+    {
+        Vector3 vel = new Vector3();
+        Vector3 min = new Vector3(pointOfDoom, 0, 0);
+        min = transform.TransformPoint(min);
+        for (int i = 0; i < objectsToMove.Count; i++)
+        {
+            if (objectsToMove[i].transform.position.x < min.x && rowsAdded > allowedRowCount)
+            {
+                objectsToMove[i].transform.localScale = buildingScale;
+                objectsToMove[i].GetComponent<MeshRenderer>().materials = buidlingTemplate.GetComponent<MeshRenderer>().materials;
+                objectsToMove[i].SetActive(false);
+                objectsToMove.RemoveAt(i);
+                i--;
+            }
+            else
+            {
+                vel = objectsToMove[i].transform.position;
+                vel.x += -velocity * Time.deltaTime * transform.localScale.x;
+                objectsToMove[i].transform.position = vel;
+            }
+        }
+    }
+
+
+
 
 
     void OffsetVertices(int start, int end)
     {
         frequencyData = audioAnalyzer.GetFrequencyData();
-
-        //Debug.Log(frequencyData[2]);
         int counter = 0;
         int mod = 0;
-        
+
         for (int i = start; i <= end; i++)
         {
-            if(breakCount >= 3)
+            if (breakCount >= 3)
             {
-                if (breakCount >= 4 && i == end)
                 {
                     breakCount = 0;
                 }
-                //Debug.Log("break!");
-
-                vertex.Set(vertices[i-zCurSize].x, 0, vertices[i].z);
+                vertex.Set(vertices[i - zCurSize].x, 0, vertices[i].z);
                 vertices[i] = vertex;
-
-
             }
             else
             {
@@ -438,44 +917,15 @@ public class MeshGenerator : MonoBehaviour, AudioAnalyzer.AudioCallbacks{
                 {
                     vertex.Set(vertices[i].x, vertices[i].y + frequencyData[counter] * offsetStrength, vertices[i].z);
                     vertices[i] = vertex;
-
                 }
                 else if (mod == 4)
                 {
-
                     counter++;
                 }
             }
-            
         }
         breakCount++;
     }
-
-
-    private void BPM()
-    {
-        Debug.Log("bpm: " + beatCounter *6);
-    }
-
-    public void onOnbeatDetected(float beatStrength)
-    {
-        beatCounter++;
-    }
-
-    public void onSpectrum(float[] spectrum)
-    {
-        ////The spectrum is logarithmically averaged
-        ////to 12 bands
-
-        //for (int i = 0; i < spectrum.Length; ++i)
-        //{
-        //    Vector3 start = new Vector3(i, 0, 0);
-        //    Vector3 end = new Vector3(i, spectrum[i], 0);
-        //    Debug.DrawLine(start, end);
-        //}
-    }
-
-
 
     void OnDisable()
     {
