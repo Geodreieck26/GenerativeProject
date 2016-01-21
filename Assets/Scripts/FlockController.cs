@@ -11,15 +11,10 @@ public class FlockController : MonoBehaviour
     [SerializeField]
     [Range(0.0f, 5.0f)]
     public float flyUpdateRate = 1.0f;
-    public float colorUpdateRate = 0.4f;
 
     // clamp xy or yz?
     [SerializeField]
     public bool clampXY = true;
-
-    // beat or spectrum color?
-    [SerializeField]
-    public bool beatColor = true;
 
     // flock behaviour and stats variables
     [SerializeField]
@@ -29,7 +24,7 @@ public class FlockController : MonoBehaviour
     [SerializeField]
     public GameObject target;
     [SerializeField]
-    public int flockSize = 100;
+    public int flockSize = 20;
     [SerializeField]
     public int pushOutRadius = 5;
     [SerializeField]
@@ -56,6 +51,9 @@ public class FlockController : MonoBehaviour
     {
         Kick, Snare, Hihat
     }
+    public bool[] colorChangeEnabled;
+    [SerializeField]
+    public float colorChangeRate = 0.05f;
 
     // general center and velocity
     public Vector3 flockCenter;
@@ -97,6 +95,12 @@ public class FlockController : MonoBehaviour
             boid.transform.localPosition = position;
             boid.GetComponent<Boid>().SetController(gameObject);
             boids[i] = boid;
+        }
+
+        colorChangeEnabled = new bool[flockSize];
+        for (int i = 0; i < colorChangeEnabled.Length; i++)
+        {
+            colorChangeEnabled[i] = true;
         }
     }
 
@@ -148,17 +152,25 @@ public class FlockController : MonoBehaviour
         }
     }
 
-    //changes the color according to averageValues
+    //changes the color according to beat
     void BeatChangeColor(BeatIndex index)
     {
-        if (beatColor)
+        Color color = colorGenerator.GenColor(1f, 1f);
+        for (int i = 0; i < boids.Length; i++)
         {
-            Color color = colorGenerator.GenColor(1f, 1f);
-            foreach (GameObject boid in boids)
+            Boid script = boids[i].GetComponent<Boid>();
+            if (script.index == (int)index && colorChangeEnabled[i] == true)
             {
-                if(boid.GetComponent<Boid>().index == (int)index)
-                    boid.GetComponentsInChildren<Renderer>()[0].material.SetColor("_EmissionColor", color);
+                boids[i].GetComponentsInChildren<Renderer>()[0].material.SetColor("_EmissionColor", color);
+                colorChangeEnabled[i] = false;
+                StartCoroutine(WaitforEnable(i));
             }
         }
+    }
+
+    IEnumerator WaitforEnable(int i)
+    {
+        yield return new WaitForSeconds(colorChangeRate);
+        colorChangeEnabled[i] = true;
     }
 }

@@ -15,31 +15,18 @@ public class Boid : MonoBehaviour
 
     // spectrum/beat index, between 1/0 and 5/2
     public int index = 0;
-    
-    // spectrum color change variables
-    private Color genColor;
-    private Color currColor;
-    private float average = 0;
-    private int averageCounter = 0;
 
     void Start()
     {
         iTween.Init(gameObject);
         FlockController controller = flockController.GetComponent<FlockController>();
-
+        
         // init fly time
         currFlyTime = controller.flyUpdateRate;
 
         // set index
-        if (controller.beatColor)
-        {
-            index = (int)Random.Range(0, 2.99f);
-        } else
-        {
-            index = (int)Random.Range(1, 5.99f);
-        }
+        index = (int)Random.Range(0, 2.99f);
         Debug.Log(index);
-        currColor = GetComponentsInChildren<Renderer>()[0].material.GetColor("_EmissionColor");
 
         // set animation
         anim = GetComponent<Animator>();
@@ -56,26 +43,6 @@ public class Boid : MonoBehaviour
         {
             currFlyTime = 0.0f;
             Flying();
-        }
-
-        if (!controller.beatColor)
-        { 
-            currColorTime += Time.deltaTime;
-            float[] averageValues = controller.averageValues;
-            for (int i = 0; i < averageValues.Length; i++)
-            {
-                average += averageValues[i];
-                averageCounter++;
-            }
-            if (currColorTime >= controller.colorUpdateRate)
-            {
-                average = average / (averageCounter * 8);
-                if (controller.averageValues[index] > average)
-                {
-                    SpectrumChangeColor();
-                }
-                ResetColorVars();
-            }
         }
     }
 
@@ -168,20 +135,5 @@ public class Boid : MonoBehaviour
     public void SetController(GameObject flockController)
     {
         this.flockController = flockController;
-    }
-
-    //changes the color according to averageValues
-    void SpectrumChangeColor()
-    {
-        FlockController controller = flockController.GetComponent<FlockController>();
-        GetComponentsInChildren<Renderer>()[0].material.SetColor("_EmissionColor", controller.colorGenerator.GenColor(1f, 1f));
-    }
-
-    // resets the variables needed for color change
-    void ResetColorVars()
-    {
-        average = 0.0f;
-        averageCounter = 0;
-        currColorTime = 0.0f;
     }
 }
