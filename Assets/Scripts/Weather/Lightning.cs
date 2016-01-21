@@ -4,21 +4,16 @@ using System.Collections;
 public class Lightning : MonoBehaviour {
 
 	private LineRenderer lineRenderer;
-	//public WeatherController controller;
-	private LightningMaker maker;
+	private WeatherController controller;
+	
+	private int numOfSegments;
+	private Color colour;
+	private float lightningOffset;
+	private float lineWidth;
 
-	private float maxZ = 8f;
-	private int numOfSegments = 12;
-	private Color colour = Color.white;
-	private float PosRange = 0.5f;
+	private float PosRange;
 
-	private bool ray;
 	private Vector3 direction;
-	//must be as long as weather height
-	private float maxLength = 3f;
-	private float lightningOffset = 0.3f;
-
-	private float lineWidth = 0.1f;
 
 	private Vector3 lightningPosition;
 
@@ -32,25 +27,27 @@ public class Lightning : MonoBehaviour {
 		set { this.direction = value; }
 	}
 
-	public float MaxLength
-	{
-		get { return this.maxLength; }
-		set { this.maxLength = value; }
-	}
-
 	void Start () { 
+		controller = FindObjectOfType<WeatherController> ();
+
 		lineRenderer = GetComponent<LineRenderer>();
-		lineRenderer.SetVertexCount(numOfSegments);		
-		lineRenderer.SetWidth(lineWidth / 2f, lineWidth / 2f);
 
 		this.direction = new Vector3 (0,-1,0);
+		this.numOfSegments = controller.lightningSegments;
+		this.lineWidth = controller.lightningWidth;
+		this.colour = controller.lightningColor;
+		this.lightningOffset = controller.lightningOffset;
+
+		lineRenderer.SetVertexCount(numOfSegments);		
+		lineRenderer.SetWidth(lineWidth / 2f, lineWidth / 2f);
+		lineRenderer.SetColors (colour, colour);
 
 		generateRandomLightnings ();
 		setLightning ();
 	}
 
 	void generateRandomLightnings () {	
-		lightningPosition = new Vector3(Random.Range (3,-3),3,Random.Range(3,-3));		
+		lightningPosition = new Vector3(Random.Range (5,-5), this.transform.position.y, Random.Range(5,-5));		
 	}
 
 	void setLightning() {
@@ -59,10 +56,7 @@ public class Lightning : MonoBehaviour {
 
 			if(Physics.Raycast(LightningPosition, Direction, out hitInfo)) {
 				generateRay(hitInfo);
-				Debug.DrawRay(LightningPosition, hitInfo.point-LightningPosition);
 			} 
-
-			Destroy(this.gameObject, 0.3f);
 	}
 
 	void calculateLinePoints (float dist) {
