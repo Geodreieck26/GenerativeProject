@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class CloudMaker : MonoBehaviour {
+public class Clouds : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
