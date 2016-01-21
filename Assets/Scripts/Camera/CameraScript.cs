@@ -2,6 +2,9 @@
 using System.Collections;
 
 public class CameraScript : MonoBehaviour {
+    #region params
+
+    private GameObject audioBeat;
 
     // Mesh as GameObject.
     private GameObject generatedMesh;
@@ -79,10 +82,29 @@ public class CameraScript : MonoBehaviour {
     // Z Offset for static camera look at use.
     private float lookAtZOffset = 1f;
 
+    iTweenEvent[] tweenAroundEvents;
+
+    private int beatAmount;
+
+    private int waypointIndex = 0;
+
+    bool tween = true;
+
+    private bool tweenComplete = true;
+    [SerializeField]
+    private GameObject[] wayPoints;
+
+    [SerializeField]
+    // Defines, when the iTween movement will be played.
+    int beatAmountCompare = 4;
+
+    #endregion params
+
     /// <summary>
     /// Initialize everything.
     /// </summary>
     void Start () {
+        gameObject.GetComponent<BeatDetection>().CallBackFunction = MyCallbackEventHandler;
         startPosition = transform.position;
         car = GameObject.FindGameObjectWithTag("Car");
         if (car != null)
@@ -110,15 +132,40 @@ public class CameraScript : MonoBehaviour {
         {
             Debug.Log("*********************No car found!********************************");
         }
-
-
-        xAxisScale = generatedMesh.transform.localScale.x;
-        yAxisScale = generatedMesh.transform.localScale.y;
-        zAxisScale = generatedMesh.transform.localScale.z;
-
+        
+        tweenAroundEvents = transform.GetComponents<iTweenEvent>();
+        foreach (iTweenEvent tweenAroundEvent in tweenAroundEvents)
+        {
+            Debug.Log(tweenAroundEvent.tweenName);
+        }
+        //xAxisScale = generatedMesh.transform.localScale.x;
+        //yAxisScale = generatedMesh.transform.localScale.y;
+        //zAxisScale = generatedMesh.transform.localScale.z;
+        
         CalculateStaticEverything();
 
         //CalculateEverything();
+    }
+    #region methods
+
+    /// <summary>
+    /// Audio Callback eventhandler for beat detection.
+    /// </summary>
+    /// <param name="eventInfo">Info of the event which was triggered.</param>
+    public void MyCallbackEventHandler(BeatDetection.EventInfo eventInfo)
+    {
+        switch(eventInfo.messageInfo)
+        {
+            case BeatDetection.EventType.Kick:
+                //Debug.Log("Beat!!");
+                beatAmount++;
+                //calculateStaticSideSweepTargetPosition();
+                if (tweenComplete)
+                {
+                    calculateWaypoint();
+                }                
+                break;
+        }
     }
 
     /// <summary>
@@ -214,6 +261,7 @@ public class CameraScript : MonoBehaviour {
     void calculateStaticCameraLookAt()
     {
         lookAtPosition = new Vector3(car.transform.position.x, car.transform.position.y, car.transform.position.z);
+        
     }
 
 
@@ -283,9 +331,46 @@ public class CameraScript : MonoBehaviour {
         calculateStaticSideSweepTargetPosition();
     }
 
+    #endregion methods
+
+
+    void SetIsComplete()
+    {
+        tweenComplete = true;
+        Debug.Log("Completed!");
+    }
+
+    void calculateWaypoint()
+    {
+
+        int random = Random.Range(0,3) - 1;
+        if (random + waypointIndex < 0)
+        {
+            waypointIndex = tweenAroundEvents.Length;
+        } else if (random + waypointIndex >= tweenAroundEvents.Length)
+        {
+            waypointIndex = 0;
+        }
+        
+        waypointIndex += random;
+        
+        if (tweenComplete)        
+        {
+            tweenComplete = false;
+            //tweenAroundEvents[waypointIndex].
+            Debug.Log("random Number: " + random);
+            Debug.Log("waypointindex Number: " + waypointIndex);
+            tweenAroundEvents[waypointIndex].Play();
+            
+            beatAmount = 0;
+        }
+    }
+
     void Update()
     {
+        //transform.LookAt(lookAtPosition, new Vector3(0, 1, 0));
+        
         //fancyCameraMove();
-        cameraMove();
+        //cameraMove();       
     }
 }
