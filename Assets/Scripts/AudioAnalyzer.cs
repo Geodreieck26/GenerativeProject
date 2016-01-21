@@ -8,7 +8,8 @@ public class AudioAnalyzer : MonoBehaviour {
     public int samples;
     private float[] frequencyData;
 
-
+    // Determines if the script ist called the first time.
+    bool firstCall = true;
 
     //beat detection variables
 
@@ -44,6 +45,9 @@ public class AudioAnalyzer : MonoBehaviour {
 
     float[] spec; // the spectrum of the previous step
 
+    [SerializeField]
+    float beatDetectionThreshold = 0f;
+
     /* Autocorrelation structure */
     int maxlag = 100; // (in frames) largest lag to track
     float decay = 0.997f; // smoothing constant for running average
@@ -68,7 +72,22 @@ public class AudioAnalyzer : MonoBehaviour {
     }
 
 
-
+    private float[] getPeaksAtThreshold(float[] data,float threshold)
+    {
+        float[] peaksArray = new float[data.Length];
+        var length = data.Length;
+        for (var i = 0; i < length;)
+        {
+            if (data[i] > threshold)
+            {
+                peaksArray[i] = data[i];
+                // Skip forward ~ 1/4s to get past this peak.
+                i += 10000;
+            }
+            i++;
+        }
+        return peaksArray;
+    }
 
 
     public int Samples
@@ -178,11 +197,37 @@ public class AudioAnalyzer : MonoBehaviour {
         return ret;
     }
 
+    [ExecuteInEditMode]
+    void StartAnalyze()
+    {
+        if (firstCall)
+        {
+            AudioSource dummyAudio = currentaudio;
+            dummyAudio.Play();
+            dummyAudio.pitch = 5;
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
+        
         if (currentaudio.isPlaying)
         {
+            if (firstCall) 
+            {
+                firstCall = !firstCall;
+                float[] audioData = new float[512];
+                currentaudio.GetOutputData(audioData, 0);
+                //Debug.Log(audioData);
+                float[] beatPeaks = getPeaksAtThreshold(frequencyData, beatDetectionThreshold);
+
+                foreach (float data in audioData)
+                {
+                    //Debug.Log(data);
+                }                
+                Debug.Log(currentaudio.timeSamples);
+            }
             float[] spectrum = new float[bufferSize];
             currentaudio.GetSpectrumData(spectrum, 0, FFTWindow.BlackmanHarris);
             float[] averages = computeAverages(spectrum);
@@ -194,6 +239,8 @@ public class AudioAnalyzer : MonoBehaviour {
                     callback.onSpectrum(averages);
                 }
             }
+
+
 
             /* calculate the value of the onset function in this frame */
             float onset = 0;
