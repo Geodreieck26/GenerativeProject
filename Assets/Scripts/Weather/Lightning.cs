@@ -11,12 +11,13 @@ public class Lightning : MonoBehaviour {
 	private float lightningOffset;
 	private float lineWidth;
 
-	private float PosRange;
-
 	private Vector3 direction;
-
 	private Vector3 lightningPosition;
 
+
+	private float widthFadeTimer = 0f;
+	private float timerHelper = 0f;
+		
 	public Vector3 LightningPosition {
 		get{return this.lightningPosition;}
 		set{this.lightningPosition = value;}
@@ -46,8 +47,12 @@ public class Lightning : MonoBehaviour {
 		setLightning ();
 	}
 
+	void Update() {
+		SizeFadeOut ();
+	}
+
 	void generateRandomLightnings () {	
-		lightningPosition = new Vector3(Random.Range (5,-5), this.transform.position.y, Random.Range(5,-5));		
+		lightningPosition = new Vector3(Random.Range(-20,20), this.transform.position.y,Random.Range(-20,20));		
 	}
 
 	void setLightning() {
@@ -87,4 +92,13 @@ public class Lightning : MonoBehaviour {
 		calculateLinePoints(distance);
 	}
 
+	private void SizeFadeOut() {
+		if (timerHelper >= 0.3f / 1.2f){
+			float lerpWidth = Mathf.Lerp(lineWidth / 1.2f, 0f, widthFadeTimer / (0.3f / 1.2f));
+			lineRenderer.SetWidth(lerpWidth, lerpWidth);
+			widthFadeTimer += Time.deltaTime;
+		}		
+		timerHelper += Time.deltaTime;
+	}
+	
 }

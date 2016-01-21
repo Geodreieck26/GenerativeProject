@@ -6,6 +6,9 @@ public class WeatherController : MonoBehaviour {
 	public ColorGenerator colorGenerator;
 	public AudioAnalyzer analyzer;
 	public GameObject Lightningpref;
+	public GameObject Cloudpref;
+
+	public Camera cam;
 
 	[SerializeField]
 	[Range(5.0f, 25.0f)]
@@ -24,12 +27,20 @@ public class WeatherController : MonoBehaviour {
 	public float lightningOffset = 0.3f;
 
 	public Color lightningColor;
+	public Color cloudColor;
 
-	private Vector3 lightningPosition;
+	private Vector3 lightningPos;
 
-	public Vector3 LightningPosition {
-		get{return this.lightningPosition;}
-		set{this.lightningPosition = value;}
+	public Vector3 LightningPos {
+		get{return this.lightningPos;}
+		set{this.lightningPos = value;}
+	}
+
+	private Vector3 cloudPos;
+	
+	public Vector3 CloudPos {
+		get{return this.cloudPos;}
+		set{this.cloudPos = value;}
 	}
 
 	private GameObject actualMesh;
@@ -47,29 +58,28 @@ public class WeatherController : MonoBehaviour {
 
 		analyzer = FindObjectOfType<AudioAnalyzer>();
 		colorGenerator = FindObjectOfType<ColorGenerator>();
+		cam = FindObjectOfType<Camera> ();
 		FindObjectOfType<BeatDetection>().CallBackFunction = BeatCallbackEventHandler;
 
-		actualMesh = GameObject.FindGameObjectWithTag ("Mesh");
+	/*	actualMesh = GameObject.FindGameObjectWithTag ("Mesh");
 		mesh = actualMesh.GetComponent<MeshFilter>().mesh;
-		vertices = mesh.vertices; 
+		vertices = mesh.vertices;  */
 
-		LightningPosition = new Vector3 (0,weatherHeight,0);
+		LightningPos = new Vector3 (cam.transform.position.x,weatherHeight,cam.transform.position.z);
+		CloudPos = new Vector3 (cam.transform.position.x,weatherHeight,cam.transform.position.z);
 
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		frequencies = analyzer.GetFrequencyData ();
-
 	}
 
-	void checkLightning() {
-
-	
+	void generateClouds () {
+		Instantiate (Cloudpref, cloudPos, Quaternion.identity);
 	}
 
 	void generateLightning () {
-		Destroy(Instantiate (Lightningpref, lightningPosition, Quaternion.identity) as GameObject, 0.3f);
+		Destroy(Instantiate (Lightningpref, lightningPos, Quaternion.identity) as GameObject, 0.3f);
 	}
 
 	public void onOnbeatDetected (float beatStrength) {
@@ -106,5 +116,6 @@ public class WeatherController : MonoBehaviour {
 
 	void BeatChangeColor(BeatIndex index) {
 		lightningColor = colorGenerator.GenColor(1f, 1f);
+		cloudColor = colorGenerator.GenColor (1f,1f);
 	} 
 }
