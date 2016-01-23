@@ -43,12 +43,6 @@ public class WeatherController : MonoBehaviour {
 		set{this.cloudPos = value;}
 	}
 
-	private GameObject actualMesh;
-	private Mesh mesh;
-	private Vector3[] vertices;
-
-	private float[] frequencies = new float[0];
-
 	public enum BeatIndex {
 		Kick, Snare, Hihat
 	}
@@ -61,12 +55,8 @@ public class WeatherController : MonoBehaviour {
 		cam = FindObjectOfType<Camera> ();
 		FindObjectOfType<BeatDetection>().CallBackFunction = BeatCallbackEventHandler;
 
-	/*	actualMesh = GameObject.FindGameObjectWithTag ("Mesh");
-		mesh = actualMesh.GetComponent<MeshFilter>().mesh;
-		vertices = mesh.vertices;  */
-
-		LightningPos = new Vector3 (cam.transform.position.x,weatherHeight,cam.transform.position.z);
-		CloudPos = new Vector3 (cam.transform.position.x,weatherHeight,cam.transform.position.z);
+		LightningPos = new Vector3 (cam.transform.position.x, weatherHeight, cam.transform.position.z);
+		CloudPos = new Vector3 (cam.transform.position.x, weatherHeight, cam.transform.position.z);
 
 	}
 	
@@ -82,40 +72,38 @@ public class WeatherController : MonoBehaviour {
 		Destroy(Instantiate (Lightningpref, lightningPos, Quaternion.identity) as GameObject, 0.3f);
 	}
 
-	public void onOnbeatDetected (float beatStrength) {
-		
-
-		
-	}
-	
-	public void onSpectrum (float[] spectrum) {
-		
-	}
-
 	// handles the beat events
-	public void BeatCallbackEventHandler(BeatDetection.EventInfo eventInfo)
-	{
+	public void BeatCallbackEventHandler(BeatDetection.EventInfo eventInfo) {
 		switch (eventInfo.messageInfo)
 		{
 		case BeatDetection.EventType.Energy:
 			break;
 		case BeatDetection.EventType.HitHat:
 			BeatSetLightning(BeatIndex.Hihat);
+			BeatSetClouds(BeatIndex.Hihat);
 			break;
 		case BeatDetection.EventType.Kick:
-			BeatChangeColor(BeatIndex.Kick);
+			BeatChangeColor(BeatIndex.Kick, true);
 			break;
 		case BeatDetection.EventType.Snare:
+			BeatChangeColor(BeatIndex.Snare, false);
 			break;
 		}
+	}
+
+	void BeatSetClouds(BeatIndex index) {
+		generateClouds ();
 	}
 
 	void BeatSetLightning(BeatIndex index) {
 		generateLightning ();
 	}
 
-	void BeatChangeColor(BeatIndex index) {
-		lightningColor = colorGenerator.GenColor(1f, 1f);
-		cloudColor = colorGenerator.GenColor (1f,1f);
+	void BeatChangeColor(BeatIndex index, bool lightning) {
+		if(lightning) {
+			lightningColor = colorGenerator.GenColor(1f, 1f);
+		} else {
+			cloudColor = colorGenerator.GenColor (1f,1f);
+		}
 	} 
 }

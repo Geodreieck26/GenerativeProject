@@ -10,6 +10,8 @@ public class Clouds : MonoBehaviour {
 	private float scaleY;
 	private float scaleZ;
 
+	private float timerHelper = 0f;
+
 	private Vector3 cloudPosition;	
 	public Vector3 CloudPosition {
 		get{return this.cloudPosition;}
@@ -23,11 +25,20 @@ public class Clouds : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
-	
+	void Update () {	
+		destroyCloud ();
 	}
 
 	void generateRandomClouds () {	
 		cloudPosition = new Vector3(Random.Range(-20,20), Random.Range(5,-5),Random.Range(-20,20));		
+	}
+
+	void destroyCloud() {
+		timerHelper += Time.deltaTime;
+
+		if(timerHelper >= Random.Range(3f,5f)) {
+			Destroy(this.gameObject);
+		}
+
 	}
 }
