@@ -26,6 +26,18 @@ public class WeatherController : MonoBehaviour {
 	[Range(0.1f, 0.6f)]
 	public float lightningOffset = 0.3f;
 
+	[SerializeField]
+	[Range(0.1f, 1f)]
+	public float scaleCloudX = 0.3f;
+
+	[SerializeField]
+	[Range(0.1f, 0.3f)]
+	public float scaleCloudY = 0.3f;
+
+	[SerializeField]
+	[Range(0.1f, 1f)]
+	public float scaleCloudZ = 0.3f;
+
 	public Color lightningColor;
 	public Color cloudColor;
 
@@ -47,6 +59,8 @@ public class WeatherController : MonoBehaviour {
 		Kick, Snare, Hihat
 	}
 
+	private GameObject[] clouds;
+
 	// Use this for initialization
 	void Start () {
 
@@ -64,8 +78,13 @@ public class WeatherController : MonoBehaviour {
 	void Update () {
 	}
 
+	void scaleCloud() {
+		Cloudpref.transform.localScale = new Vector3 (scaleCloudX,scaleCloudY,scaleCloudZ);
+	}
+
 	void generateClouds () {
-		Instantiate (Cloudpref, cloudPos, Quaternion.identity);
+		Instantiate (Cloudpref, CloudPos, Quaternion.identity);
+		scaleCloud ();
 	}
 
 	void generateLightning () {
@@ -104,6 +123,12 @@ public class WeatherController : MonoBehaviour {
 			lightningColor = colorGenerator.GenColor(1f, 1f);
 		} else {
 			cloudColor = colorGenerator.GenColor (1f,1f);
+
+			clouds = GameObject.FindGameObjectsWithTag("Cloud");
+
+			for (int i = 0; i < clouds.Length; i++){
+				clouds[i].GetComponentsInChildren<Renderer>()[0].material.SetColor("_EmissionColor", cloudColor);
+			}
 		}
 	} 
 }

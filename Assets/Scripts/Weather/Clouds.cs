@@ -4,10 +4,10 @@ using System.Collections;
 public class Clouds : MonoBehaviour {
 
 	private WeatherController controller;
+	private GameObject cloud;
 	private Color colour;
 
 	private float scaleX;
-	private float scaleY;
 	private float scaleZ;
 
 	private float timerHelper = 0f;
@@ -21,7 +21,11 @@ public class Clouds : MonoBehaviour {
 	// Use this for initialization
 	void Start () {	
 		controller = FindObjectOfType<WeatherController> ();
+		cloud = gameObject;
+		cloud.transform.RotateAround (this.transform.position, new Vector3(0,1,0),270f);
 		this.colour = controller.cloudColor;
+
+		generateRandomClouds ();
 	}
 	
 	// Update is called once per frame
@@ -30,7 +34,13 @@ public class Clouds : MonoBehaviour {
 	}
 
 	void generateRandomClouds () {	
-		cloudPosition = new Vector3(Random.Range(-20,20), Random.Range(5,-5),Random.Range(-20,20));		
+		cloudPosition = new Vector3(Random.Range(-20,20), Random.Range(this.transform.position.y+3,this.transform.position.y-3),Random.Range(-20,20));	
+		cloud.transform.position = cloudPosition;
+
+		scaleX = Random.Range (0,1);
+		scaleZ = Random.Range (0,1);
+
+		cloud.transform.localScale += new Vector3 (scaleX,0f,scaleZ);
 	}
 
 	void destroyCloud() {
