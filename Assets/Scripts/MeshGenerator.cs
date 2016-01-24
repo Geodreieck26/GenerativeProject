@@ -159,6 +159,19 @@ public class MeshGenerator : MonoBehaviour
 
 
 
+    public List<GameObject> ObjectsToMove
+    {
+
+        get { return objectsToMove; }
+
+    }
+
+    public Vector3[] assetSpawns;
+
+    private bool onceUpdate;
+
+
+
     // Use this for initialization
     void Awake()
     {
@@ -228,6 +241,8 @@ public class MeshGenerator : MonoBehaviour
 
         colorGen = Camera.main.GetComponent<ColorGenerator>();
 
+        assetSpawns = new Vector3[2];
+
 
     }
 
@@ -266,7 +281,14 @@ public class MeshGenerator : MonoBehaviour
     }
 
 
-
+    public Vector3[] GetSpawnPositions()
+    {
+        if(currentSector == Sector.Building)
+        {
+            return assetSpawns;
+        }
+        return null;
+    }
 
 
 
@@ -339,7 +361,6 @@ public class MeshGenerator : MonoBehaviour
             }
             else if (i % verts == 2)
             {
-
                 tmp = vertices[indicesLine[i]].z;
                 vertex.Set(vertices[indicesLine[i]].x, vertices[indicesLine[i]].y, tmp);
                 vertices[indicesLine[i]] = vertex;
@@ -350,9 +371,6 @@ public class MeshGenerator : MonoBehaviour
                 vertex.Set(vertices[indicesLine[zVertices - 1 - i]].x, vertices[indicesLine[zVertices - 1 - i]].y, tmp);
                 vertices[indicesLine[zVertices - 1 - i]] = vertex;
                 nextZright = tmp;
-
-
-
             }
             else if (i % verts == 3 || i % verts == 4)
             {
@@ -578,7 +596,7 @@ public class MeshGenerator : MonoBehaviour
         }
 
       
-            OffsetHeight(indicesLine, sideWalk);
+        OffsetHeight(indicesLine, sideWalk);
    
 
 
@@ -612,48 +630,23 @@ public class MeshGenerator : MonoBehaviour
             }
             else
             {
-                Debug.Log("entered");
-                // if (i != (half + streetverts) * 2 && i != (half + streetverts - 1) * 2 - 1 && i != (half - streetverts) * 2 - 1 && i != (half - streetverts + 1) * 2)
-                {
-                    indices[1].Add(indexList[i * 3]);
-                    indices[1].Add(indexList[(i * 3) + 1]);
-                    indices[1].Add(indexList[(i * 3) + 2]);
-                }
-                //else
-                //{
-                //    if (sideWalk)
-                //    {
-                //        indices[1].Add(indexList[i * 3]);
-                //        indices[1].Add(indexList[(i * 3) + 1]);
-                //        indices[1].Add(indexList[(i * 3) + 2]);
-                //    }
-                //    else
-                //    {
-                //        indices[0].Add(indexList[i * 3]);
-                //        indices[0].Add(indexList[(i * 3) + 1]);
-                //        indices[0].Add(indexList[(i * 3) + 2]);
-                //    }
-
-                //}
-
-
+               
+                indices[1].Add(indexList[i * 3]);
+                indices[1].Add(indexList[(i * 3) + 1]);
+                indices[1].Add(indexList[(i * 3) + 2]);              
 
             }
            
         }
 
         if (addToQueue)
-        {
-            //mesh.Clear();
-            //mesh.subMeshCount = 2;
+        {            
             mesh.SetVertices(vertices);
             for (int i = 0; i < indices.Length; i++)
             {
                 mesh.SetIndices(indices[i].ToArray(), meshTopolgy, i);
             }
-            //mesh.SetIndices(indices.ToArray(), meshTopolgy, 0);
-
-
+           
             mesh.RecalculateBounds();
             mesh.RecalculateNormals();
 
@@ -670,13 +663,9 @@ public class MeshGenerator : MonoBehaviour
 
 
     private void DetermineSector()
-    {
-        
+    {        
         if (currentCooldown <= 0)
         {
-            currentCooldown = Random.Range(3, 5);
-
-
             sum = 0;
             for (int i = 0; i < sectorProbabilty.Length; i++)
             {
@@ -691,42 +680,29 @@ public class MeshGenerator : MonoBehaviour
 
             float start = 0.0f;
 
-
-            
-            float rand = Random.Range(0.0f, 1.0f);
-            Debug.Log(rand);
+                        
+            float rand = Random.Range(0.0f, 1.0f);           
            
             for(int i = 0; i < realSectorProbability.Length; i++)
-            {
-                //if(start <= rand && start+realSectorProbability[i] >= rand)
+            {               
                 if (rand > start)
                 {                    
                     chosenSector++;
-                    start  = start+ realSectorProbability[i];
-                    Debug.Log("chosen: " + chosenSector);
-
-                }else
-                {
-                   // chosenSector = 1;
+                    start  = start+ realSectorProbability[i];                    
                 }
             }
 
             if (chosenSector == 0)
             {
                 currentSector = Sector.Building;
+                currentCooldown = Random.Range(3, 5);
             }
             else if (chosenSector == 1)
             {
                 currentSector = Sector.Crossing;
-
+                currentCooldown = 1.0f;
             }
         }
-        
-
-       
-
-
-
     }
 
 
@@ -786,16 +762,12 @@ public class MeshGenerator : MonoBehaviour
 
     // Update is called once per frame
     void Update()
-    {
-        
+    {        
         if (expandMesh)
         {
-           
-        
-
-            currentCooldown -= Time.deltaTime;
-            
+            currentCooldown -= Time.deltaTime;            
             currentTime += Time.deltaTime;
+
             if (currentTime >= updateRate)
             {
                 currentTime = 0;
@@ -817,10 +789,7 @@ public class MeshGenerator : MonoBehaviour
                             {
                                 PlaceBuidlingRow(GenerateAssembleInstruction());
                             }
-                        }
-
-                        
-                        
+                        }                       
                     }
                     else if(currentSector == Sector.Crossing)
                     {
@@ -832,27 +801,28 @@ public class MeshGenerator : MonoBehaviour
                         }
                         else
                         {
-
                             AddBasicRow(indicesLine, 0, true, false, false);
-
                         }
-
-                        
-
-                        
-                       
-                        //AddBasicRow(indicesLine, 0, true, false, false);
                     }
-                    
-                   
-
-
 
                     if (rowsAdded > allowedRowCount)
                     {
                         RemoveStructure();
                     }
 
+
+                    if (!onceUpdate)
+                    {
+                        int streetVerts = 2;
+                        int half = indicesLine.Length / 2;
+
+                        assetSpawns[0] = new Vector3(vertices[ indicesLine[half-streetVerts-2]].x, vertices[indicesLine[half - streetVerts-2]].y, vertices[indicesLine[half - streetVerts-2]].z);
+                        assetSpawns[0] = transform.TransformPoint(assetSpawns[0]);
+
+                        assetSpawns[1] = new Vector3(vertices[indicesLine[half + streetVerts+2]].x, vertices[indicesLine[half + streetVerts+2]].y, vertices[indicesLine[half + streetVerts+2]].z);
+                        assetSpawns[1] = transform.TransformPoint(assetSpawns[1]);
+
+                    }
                 }
                 else
                 {
