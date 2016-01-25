@@ -1,18 +1,23 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class WeatherController : MonoBehaviour {
 	
 	public ColorGenerator colorGenerator;
-	public AudioAnalyzer analyzer;
 	public GameObject Lightningpref;
 	public GameObject Cloudpref;
 
-	public Camera cam;
+	private MeshGenerator generator;
+	private List<GameObject> objectsToMove;
+	private Color col;
 
 	[SerializeField]
-	[Range(5.0f, 25.0f)]
-	public float weatherHeight = 10f;
+	[Range(70.0f, 200.0f)]
+	public float weatherHeight = 70f;
+
+	[SerializeField]
+	[Range(10.0f, 30.0f)]
+	public float cloudHeightRange = 15f;
 
 	[SerializeField]
 	[Range(5.0f, 50.0f)]
@@ -27,19 +32,24 @@ public class WeatherController : MonoBehaviour {
 	public float lightningOffset = 0.3f;
 
 	[SerializeField]
-	[Range(0.1f, 1f)]
-	public float scaleCloudX = 0.3f;
-
-	[SerializeField]
-	[Range(0.1f, 0.3f)]
-	public float scaleCloudY = 0.3f;
+	[Range(1f, 20f)]
+	public float lightningDist = 10f;
 
 	[SerializeField]
 	[Range(0.1f, 1f)]
-	public float scaleCloudZ = 0.3f;
+	public float lightningProbability = 0.5f;
 
-	public Color lightningColor;
-	public Color cloudColor;
+	[SerializeField]
+	[Range(0.01f, 0.1f)]
+	public float scaleCloudX = 0.01f;
+
+	[SerializeField]
+	[Range(0.01f, 0.1f)]
+	public float scaleCloudY = 0.01f;
+
+	[SerializeField]
+	[Range(0.01f, 0.1f)]
+	public float scaleCloudZ = 0.01f;
 
 	private Vector3 lightningPos;
 
@@ -59,76 +69,58 @@ public class WeatherController : MonoBehaviour {
 		Kick, Snare, Hihat
 	}
 
-	private GameObject[] clouds;
+	private float timerHelper = 0f;
 
 	// Use this for initialization
 	void Start () {
-
-		analyzer = FindObjectOfType<AudioAnalyzer>();
 		colorGenerator = FindObjectOfType<ColorGenerator>();
-		cam = FindObjectOfType<Camera> ();
-		FindObjectOfType<BeatDetection>().CallBackFunction = BeatCallbackEventHandler;
-
-		LightningPos = new Vector3 (cam.transform.position.x, weatherHeight, cam.transform.position.z);
-		CloudPos = new Vector3 (cam.transform.position.x, weatherHeight, cam.transform.position.z);
+		generator = FindObjectOfType<MeshGenerator> ();
+		objectsToMove = generator.ObjectsToMove;
 
 	}
 	
 	// Update is called once per frame
 	void Update () {
-	}
 
-	void scaleCloud() {
-		Cloudpref.transform.localScale = new Vector3 (scaleCloudX,scaleCloudY,scaleCloudZ);
+		generateClouds ();
+		generateLightning ();
+
+		timerHelper += Time.deltaTime;
 	}
 
 	void generateClouds () {
-		Instantiate (Cloudpref, CloudPos, Quaternion.identity);
-		scaleCloud ();
+		Vector3[] pos = generator.GetSpawnPositions ();
+		cloudPos = new Vector3 (pos[0].x, Random.Range (weatherHeight + cloudHeightRange, weatherHeight - cloudHeightRange), Random.Range(pos[0].z, pos[1].z));
+
+		if(timerHelper <= 0f) {
+			col = colorGenerator.GenColor (1f,1f);
+			timerHelper = 5f;
+		}
+
+		GameObject cloud = Instantiate (Cloudpref, CloudPos, Quaternion.identity) as GameObject;
+		cloud.transform.localScale = scaleCloud ();
+		cloud.GetComponent<MeshRenderer> ().material.SetColor("_EmissionColor", col);
+		objectsToMove.Add (cloud);
+	}
+
+	Vector3 scaleCloud() {
+		return new Vector3 (scaleCloudX, scaleCloudY, scaleCloudZ);
 	}
 
 	void generateLightning () {
+		Vector3[] pos = generator.GetSpawnPositions ();
+		float rndX = Random.Range (pos[0].x - lightningDist, pos[0].x + lightningDist);
+
+		LightningPos = new Vector3 (rndX, weatherHeight, Random.Range(pos[0].z, pos[1].z));
 		Destroy(Instantiate (Lightningpref, lightningPos, Quaternion.identity) as GameObject, 0.3f);
 	}
 
-	// handles the beat events
-	public void BeatCallbackEventHandler(BeatDetection.EventInfo eventInfo) {
-		switch (eventInfo.messageInfo)
-		{
-		case BeatDetection.EventType.Energy:
-			break;
-		case BeatDetection.EventType.HitHat:
-			BeatSetLightning(BeatIndex.Hihat);
-			BeatSetClouds(BeatIndex.Hihat);
-			break;
-		case BeatDetection.EventType.Kick:
-			BeatChangeColor(BeatIndex.Kick, true);
-			break;
-		case BeatDetection.EventType.Snare:
-			BeatChangeColor(BeatIndex.Snare, false);
-			break;
-		}
-	}
 
-	void BeatSetClouds(BeatIndex index) {
-		generateClouds ();
-	}
+	public void BeatSetLightning() {
+		float rnd = Random.Range (0f,1f);
 
-	void BeatSetLightning(BeatIndex index) {
-		generateLightning ();
-	}
-
-	void BeatChangeColor(BeatIndex index, bool lightning) {
-		if(lightning) {
-			lightningColor = colorGenerator.GenColor(1f, 1f);
-		} else {
-			cloudColor = colorGenerator.GenColor (1f,1f);
-
-			clouds = GameObject.FindGameObjectsWithTag("Cloud");
-
-			for (int i = 0; i < clouds.Length; i++){
-				clouds[i].GetComponentsInChildren<Renderer>()[0].material.SetColor("_EmissionColor", cloudColor);
-			}
+		if(rnd < (0.5f * lightningProbability)) {
+			generateLightning ();
 		}
 	} 
 }

@@ -7,7 +7,8 @@ public class Lightning : MonoBehaviour {
 	private WeatherController controller;
 	
 	private int numOfSegments;
-	private Color colour;
+	private Color colourFloor = Color.white;
+	private Color colourSky = Color.blue;
 	private float lightningOffset;
 	private float lineWidth;
 
@@ -36,12 +37,11 @@ public class Lightning : MonoBehaviour {
 		this.direction = new Vector3 (0,-1,0);
 		this.numOfSegments = controller.lightningSegments;
 		this.lineWidth = controller.lightningWidth;
-		this.colour = controller.lightningColor;
 		this.lightningOffset = controller.lightningOffset;
 
 		lineRenderer.SetVertexCount(numOfSegments);		
 		lineRenderer.SetWidth(lineWidth / 2f, lineWidth / 2f);
-		lineRenderer.SetColors (colour, colour);
+		lineRenderer.SetColors (colourSky, colourFloor);
 
 		generateRandomLightnings ();
 		setLightning ();
@@ -52,7 +52,7 @@ public class Lightning : MonoBehaviour {
 	}
 
 	void generateRandomLightnings () {	
-		lightningPosition = new Vector3(Random.Range(-20,20), this.transform.position.y,Random.Range(-20,20));		
+		lightningPosition = new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z);		
 	}
 
 	void setLightning() {

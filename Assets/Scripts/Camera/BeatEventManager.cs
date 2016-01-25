@@ -13,6 +13,7 @@ public class BeatEventManager : MonoBehaviour {
     public CameraScript cameraScript;
     public SpawnManager spawnManager;
     public FlockController flockController;
+	public WeatherController weatherController;
 
     // Use this for initialization
     void Start () {
@@ -21,6 +22,7 @@ public class BeatEventManager : MonoBehaviour {
         cameraScript = FindObjectOfType<CameraScript>();
         spawnManager = FindObjectOfType<SpawnManager>();
         flockController = FindObjectOfType<FlockController>();
+		weatherController = FindObjectOfType<WeatherController> ();
     }
 
     private void BeatCallbackEventHandler(BeatDetection.EventInfo eventInfo)
@@ -38,6 +40,8 @@ public class BeatEventManager : MonoBehaviour {
                     spawnManager.placeAssets(BeatIndex.Hihat);
                 if(flockController)
                     flockController.BeatChangeColor(BeatIndex.Hihat);
+				if(weatherController)
+					weatherController.BeatSetLightning();
                 break;
             case BeatDetection.EventType.Kick:
                 if (carScript)
