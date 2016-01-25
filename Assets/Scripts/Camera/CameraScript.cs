@@ -6,9 +6,11 @@ public class CameraScript : MonoBehaviour {
 
     public int beatIndex = 0;
 
-    private bool calculateIsAllowed = true;
+    private bool calculateIsAllowed = false;
     public float wayPointChangeRate = 0.05f;
     private GameObject audioBeat;
+
+    public float startDelayTime = 3f;
 
     // Mesh as GameObject.
     private GameObject generatedMesh;
@@ -29,6 +31,8 @@ public class CameraScript : MonoBehaviour {
 
     // Array of the vertices of the mesh.
     private Vector3[] vertices;
+
+    private bool firstTime = true;
 
     // Amount of x vertices in one row.
     private int xRowAmount = 0;
@@ -96,6 +100,8 @@ public class CameraScript : MonoBehaviour {
 
     bool tween = true;
 
+    bool afterDelay = false;
+
     private bool tweenComplete = true;
     [SerializeField]
     private GameObject[] wayPoints;
@@ -105,6 +111,23 @@ public class CameraScript : MonoBehaviour {
     int beatAmountCompare = 4;
 
     #endregion params
+
+    void Awake()
+    {
+        tweenAroundEvents = transform.GetComponents<iTweenEvent>();
+        foreach (iTweenEvent tweenAroundEvent in tweenAroundEvents)
+        {
+            
+            if (tweenAroundEvent.tweenName == "Waypoint Start")
+            {
+                tweenAroundEvent.playAutomatically = true;
+            } else
+            {
+                tweenAroundEvent.playAutomatically = false;
+            }
+            Debug.Log(tweenAroundEvent.tweenName);
+        }
+    }
 
     /// <summary>
     /// Initialize everything.
@@ -139,17 +162,13 @@ public class CameraScript : MonoBehaviour {
             Debug.Log("*********************No car found!********************************");
         }
         
-        tweenAroundEvents = transform.GetComponents<iTweenEvent>();
-        foreach (iTweenEvent tweenAroundEvent in tweenAroundEvents)
-        {
-            Debug.Log(tweenAroundEvent.tweenName);
-        }
+
         //xAxisScale = generatedMesh.transform.localScale.x;
         //yAxisScale = generatedMesh.transform.localScale.y;
         //zAxisScale = generatedMesh.transform.localScale.z;
         
         CalculateStaticEverything();
-
+        StartCoroutine(StartDelay());
         //CalculateEverything();
     }
     #region methods
@@ -351,6 +370,8 @@ public class CameraScript : MonoBehaviour {
 
     public void calculateWaypoint(BeatEventManager.BeatIndex index)
     {
+        Debug.Log("Beat!");
+        //Debug.Log("calculateIsAllowed allowed: " + calculateIsAllowed);
         beatAmount++;
         if (this.beatIndex == (int)index && tweenComplete && calculateIsAllowed && beatAmount >= beatAmountCompare)
         {
@@ -362,15 +383,19 @@ public class CameraScript : MonoBehaviour {
             }
             if (random + waypointIndex < 0)
             {
-                waypointIndex = tweenAroundEvents.Length;
+                waypointIndex = tweenAroundEvents.Length - 1;
             }
-            else if (random + waypointIndex >= tweenAroundEvents.Length)
+            else if (random + waypointIndex >= tweenAroundEvents.Length - 1)
             {
                 waypointIndex = 0;
             }
 
             waypointIndex += random;
-
+            if (firstTime)
+            {
+                waypointIndex = 0;
+                firstTime = false;
+            }
             tweenComplete = false;
             //tweenAroundEvents[waypointIndex].
             
@@ -388,10 +413,21 @@ public class CameraScript : MonoBehaviour {
         calculateIsAllowed = true;
     }
 
+    IEnumerator StartDelay()
+    {
+        yield return new WaitForSeconds(startDelayTime);
+        calculateIsAllowed = true;
+        afterDelay = true;
+    }
+
     void Update()
     {
         //transform.LookAt(lookAtPosition, new Vector3(0, 1, 0));
-        transform.LookAt(LookTarget.transform.position, new Vector3(0, 1, 0));
+        if (afterDelay)
+        {
+            transform.LookAt(LookTarget.transform.position, new Vector3(0, 1, 0));
+        }
+        
         //fancyCameraMove();
         //cameraMove();       
     }
