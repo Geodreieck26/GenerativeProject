@@ -28,19 +28,9 @@ public class Clouds : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {	
-		//destroyCloud ();
 	}
 
 	void generateRandomClouds () {	
 		cloud.transform.position = new Vector3(this.transform.position.x, this.transform.position.y, this.transform.position.z);	
-	}
-
-	void destroyCloud() {
-		timerHelper += Time.deltaTime;
-
-		if(timerHelper >= Random.Range(3f,5f)) {
-			Destroy(this.gameObject);
-		}
-
 	}
 }
