@@ -5,11 +5,24 @@ public class Clouds : MonoBehaviour {
 
 	private GameObject cloud;
 	private float timerHelper = 0f;
+	private float randomRotation;
 
 	// Use this for initialization
 	void Start () {	
 		cloud = gameObject;
-		cloud.transform.RotateAround (this.transform.position, new Vector3(0,1,0),270f);
+		randomRotation = Random.Range(0f, 1f);
+
+		if (randomRotation < 0.25f) {
+			randomRotation = 0f;
+		}else if (randomRotation < 0.5f && randomRotation > 0.25f){
+			randomRotation = 90f;
+		}else if (randomRotation < 0.75f && randomRotation > 0.5f){
+			randomRotation = 270f;
+		}else{
+			randomRotation = 360f;
+		}
+
+		cloud.transform.RotateAround (this.transform.position, new Vector3(0,1,0),randomRotation);
 		generateRandomClouds ();
 	}
 	
