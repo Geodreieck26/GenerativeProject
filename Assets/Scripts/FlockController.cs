@@ -71,6 +71,8 @@ public class FlockController : MonoBehaviour
     //the flock prefab for refresh
     [SerializeField]
     public GameObject flockPrefab;
+    [SerializeField]
+    public float tryRefreshRate = 3.2f;
 
     void Start()
     {
@@ -102,7 +104,7 @@ public class FlockController : MonoBehaviour
             colorChangeEnabled[i] = true;
         }
 
-        InvokeRepeating("TryRefresh", 0f, 5f);
+        InvokeRepeating("TryRefresh", 0f, tryRefreshRate);
     }
 
     void Update()
