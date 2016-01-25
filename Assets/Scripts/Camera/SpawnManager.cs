@@ -9,7 +9,7 @@ public class SpawnManager : MonoBehaviour {
 
     MeshGenerator meshGeneratorScript;
 
-    private bool spawnAllowed = true;
+    private bool spawnAllowed = false;
 
     public float spawnTime = 0.05f;
     private ColorGenerator colorGenerator;
@@ -57,13 +57,14 @@ public class SpawnManager : MonoBehaviour {
                     spawnAllowed = false;
                     GameObject spawnedAsset = Instantiate(prefabs[spawnIndex]);
                     spawnedAsset.transform.position = ((positions[0] - positions[1]) * 0.5f) + positions[1];
+                    spawnedAsset.transform.position =new Vector3(spawnedAsset.transform.position.x , spawnedAsset.transform.position.y - 1f, spawnedAsset.transform.position.z);
                     spawnedAsset.transform.Rotate(0, 0, 0);
                     spawnedAsset.GetComponent<Renderer>().material.SetColor("_EmissionColor", color); ;
                     StartCoroutine(WaitforEnable());
 
                     meshGeneratorScript.ObjectsToMove.Add(spawnedAsset);
 
-                    StartCoroutine(WaitBridgeEnable(3f));
+                    StartCoroutine(WaitBridgeEnable(5f));
                 }  
             }
         }
@@ -79,10 +80,16 @@ public class SpawnManager : MonoBehaviour {
         yield return new WaitForSeconds(waitTime);
         spawnAllowed = true;
     }
+    IEnumerator WaitOnStart()
+    {
+        yield return new WaitForSeconds(3f);
+        spawnAllowed = true;
+    }
     // Use this for initialization
     void Start () {
         meshGeneratorScript = FindObjectOfType<MeshGenerator>();
         colorGenerator = FindObjectOfType<ColorGenerator>();
+        StartCoroutine(WaitOnStart());
     }
 	
 	// Update is called once per frame
