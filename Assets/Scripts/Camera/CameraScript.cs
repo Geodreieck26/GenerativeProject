@@ -22,6 +22,8 @@ public class CameraScript : MonoBehaviour {
     // Startposition of the game object.
     private Vector3 startPosition;
 
+    public GameObject LookTarget;
+
     // Velocity.
     private Vector3 velocity = Vector3.zero;
 
@@ -388,8 +390,8 @@ public class CameraScript : MonoBehaviour {
 
     void Update()
     {
-        transform.LookAt(lookAtPosition, new Vector3(0, 1, 0));
-        
+        //transform.LookAt(lookAtPosition, new Vector3(0, 1, 0));
+        transform.LookAt(LookTarget.transform.position, new Vector3(0, 1, 0));
         //fancyCameraMove();
         //cameraMove();       
     }
