@@ -22,9 +22,11 @@ public class SpawnManager : MonoBehaviour {
             {
                 GameObject spawnedAsset1 = Instantiate(prefabs[0]);
                 spawnedAsset1.transform.position = (positions[0]);
+                spawnedAsset1.transform.Rotate(0,90,0);
 
                 GameObject spawnedAsset2 = Instantiate(prefabs[0]);
                 spawnedAsset2.transform.position = (positions[1]);
+                spawnedAsset1.transform.Rotate(0, -90, 0);
 
                 meshGeneratorScript.ObjectsToMove.Add(spawnedAsset1);
                 meshGeneratorScript.ObjectsToMove.Add(spawnedAsset2);
