@@ -12,7 +12,6 @@ public class BeatEventManager : MonoBehaviour {
     public CarScript carScript;
     public CameraScript cameraScript;
     public SpawnManager spawnManager;
-    public FlockController flockController;
 	public WeatherController weatherController;
 
     // Use this for initialization
@@ -21,12 +20,13 @@ public class BeatEventManager : MonoBehaviour {
         carScript = FindObjectOfType<CarScript>();
         cameraScript = FindObjectOfType<CameraScript>();
         spawnManager = FindObjectOfType<SpawnManager>();
-        flockController = FindObjectOfType<FlockController>();
 		weatherController = FindObjectOfType<WeatherController> ();
     }
 
     private void BeatCallbackEventHandler(BeatDetection.EventInfo eventInfo)
     {
+        GameObject[] flocks = GameObject.FindGameObjectsWithTag("Flock");
+
         switch (eventInfo.messageInfo)
         {
             case BeatDetection.EventType.Energy:
@@ -38,8 +38,10 @@ public class BeatEventManager : MonoBehaviour {
                     cameraScript.calculateWaypoint(BeatIndex.Hihat);
                 if(spawnManager)
                     spawnManager.placeAssets(BeatIndex.Hihat);
-                if(flockController)
-                    flockController.BeatChangeColor(BeatIndex.Hihat);
+                foreach (GameObject flock in flocks)
+                {
+                    flock.GetComponent<FlockController>().BeatChangeColor(BeatIndex.Hihat);
+                }
 				if(weatherController)
 					weatherController.BeatSetLightning();
                 break;
@@ -50,11 +52,12 @@ public class BeatEventManager : MonoBehaviour {
                     cameraScript.calculateWaypoint(BeatIndex.Kick);
                 if (spawnManager)
                     spawnManager.placeAssets(BeatIndex.Kick);
-                if (flockController)
-                    flockController.BeatChangeColor(BeatIndex.Kick);
-
-                GameObject[] tafalen = GameObject.FindGameObjectsWithTag("Tafalende");
-                foreach(GameObject tafal in tafalen)
+                foreach (GameObject flock in flocks)
+                {
+                    flock.GetComponent<FlockController>().BeatChangeColor(BeatIndex.Kick);
+                }
+                GameObject[] tafaln = GameObject.FindGameObjectsWithTag("Tafalende");
+                foreach(GameObject tafal in tafaln)
                 {
                     tafal.GetComponent<Tafal>().Change();
                 }
@@ -67,8 +70,10 @@ public class BeatEventManager : MonoBehaviour {
                     carScript.BeatChangeColor(BeatIndex.Snare);
                 if (spawnManager)
                     spawnManager.placeAssets(BeatIndex.Snare);
-                if (flockController)
-                    flockController.BeatChangeColor(BeatIndex.Snare);
+                foreach (GameObject flock in flocks)
+                {
+                    flock.GetComponent<FlockController>().BeatChangeColor(BeatIndex.Snare);
+                }
                 break;
         }
     }

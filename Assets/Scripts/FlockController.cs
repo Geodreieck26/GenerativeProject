@@ -68,6 +68,10 @@ public class FlockController : MonoBehaviour
     // color generator script
     public ColorGenerator colorGenerator;
 
+    //the flock prefab for refresh
+    [SerializeField]
+    public GameObject flockPrefab;
+
     void Start()
     {
         // get sound analyzer & color generator
@@ -97,6 +101,8 @@ public class FlockController : MonoBehaviour
         {
             colorChangeEnabled[i] = true;
         }
+
+        InvokeRepeating("TryRefresh", 0f, 5f);
     }
 
     void Update()
@@ -131,7 +137,7 @@ public class FlockController : MonoBehaviour
         }
     }
 
-    //changes the color according to beat
+    // changes the color according to beat
     public void BeatChangeColor(BeatEventManager.BeatIndex index)
     {
         Color color = colorGenerator.GenColor(1f, 1f);
@@ -147,9 +153,37 @@ public class FlockController : MonoBehaviour
         }
     }
 
+    // color change enabling again
     IEnumerator WaitforEnable(int i)
     {
         yield return new WaitForSeconds(colorChangeRate);
         colorChangeEnabled[i] = true;
+    }
+
+    // refresh flock by destroying and instantiating again
+    void TryRefresh()
+    {
+        bool destroyable = true;
+        foreach(GameObject boid in boids)
+        {
+            if(boid.GetComponentsInChildren<BoidVisible>()[0].visible)
+            {
+                destroyable = false;
+                Debug.Log("no new flock");
+            }
+        }
+
+        if (destroyable)
+        {
+            Debug.Log("new flock");
+            Instantiate(flockPrefab, transform.position, transform.rotation);
+            DestroyObject(gameObject);
+        }
+    }
+
+    void OnDestroy()
+    {
+        CancelInvoke();
+        
     }
 }
