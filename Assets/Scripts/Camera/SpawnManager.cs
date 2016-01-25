@@ -23,7 +23,7 @@ public class SpawnManager : MonoBehaviour {
         {
             Color color = colorGenerator.GenColor(1f, 1f);
             Vector3[] positions = meshGeneratorScript.GetSpawnPositions();
-            if ( Random.Range(0.0f, 100.0f) <= 5)
+            if ( Random.Range(0.0f, 100.0f) <= 10)
             {
                 spawnIndex = 1;
             } else
@@ -32,21 +32,50 @@ public class SpawnManager : MonoBehaviour {
             }
             if (positions != null)
             {
-                // Spawn the Lanterns   
-                if (spawnIndex == 0)
+                if (meshGeneratorScript.IsSectorFreeway())
                 {
-                    GameObject spawnedAsset1 = Instantiate(prefabs[spawnIndex]);
-                    spawnedAsset1.transform.position = (positions[0]);
-                    spawnedAsset1.transform.Rotate(0, 0, -90);
-                    spawnedAsset1.GetComponent<Renderer>().material.SetColor("_EmissionColor", color);
+                    spawnIndex = 0;
+                }
+                    
+                // Spawn the Lanterns   
+                    if (spawnIndex == 0)
+                {
+                    if (meshGeneratorScript.IsSectorFreeway())
+                    {
+                        spawnIndex = 2;
 
-                    GameObject spawnedAsset2 = Instantiate(prefabs[spawnIndex]);
-                    spawnedAsset2.transform.position = (positions[1]);
-                    spawnedAsset2.transform.Rotate(0, 0, 90);
-                    spawnedAsset2.GetComponent<Renderer>().material.SetColor("_EmissionColor", color);
+                        float random = Random.Range(0.0f , 25f) + 25f;
 
-                    meshGeneratorScript.ObjectsToMove.Add(spawnedAsset1);
-                    meshGeneratorScript.ObjectsToMove.Add(spawnedAsset2);
+                        GameObject spawnedAsset1 = Instantiate(prefabs[spawnIndex]);
+                        spawnedAsset1.transform.position = new Vector3(positions[0].x, positions[0].y, positions[0].z + random);
+                        spawnedAsset1.transform.Rotate(0, 0, 0);
+                        spawnedAsset1.GetComponent<Renderer>().material.SetColor("_EmissionColor", color);
+
+                        random = Random.Range(0.0f, 25f) + 25f;
+
+                        GameObject spawnedAsset2 = Instantiate(prefabs[spawnIndex]);
+                        spawnedAsset2.transform.position = new Vector3(positions[1].x, positions[1].y, positions[1].z - random);
+                        spawnedAsset2.transform.Rotate(0, 0, 0);
+                        spawnedAsset2.GetComponent<Renderer>().material.SetColor("_EmissionColor", color);
+
+                        meshGeneratorScript.ObjectsToMove.Add(spawnedAsset1);
+                        meshGeneratorScript.ObjectsToMove.Add(spawnedAsset2);
+                    } else
+                    {
+                        GameObject spawnedAsset1 = Instantiate(prefabs[spawnIndex]);
+                        spawnedAsset1.transform.position = (positions[0]);
+                        spawnedAsset1.transform.Rotate(0, 0, -90);
+                        spawnedAsset1.GetComponent<Renderer>().material.SetColor("_EmissionColor", color);
+
+                        GameObject spawnedAsset2 = Instantiate(prefabs[spawnIndex]);
+                        spawnedAsset2.transform.position = (positions[1]);
+                        spawnedAsset2.transform.Rotate(0, 0, 90);
+                        spawnedAsset2.GetComponent<Renderer>().material.SetColor("_EmissionColor", color);
+
+                        meshGeneratorScript.ObjectsToMove.Add(spawnedAsset1);
+                        meshGeneratorScript.ObjectsToMove.Add(spawnedAsset2);
+                    }
+                   
 
                     spawnAllowed = false;
                     StartCoroutine(WaitforEnable());

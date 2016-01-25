@@ -4,11 +4,6 @@ using System;
 
 public class CarScript : MonoBehaviour {
 
-    public enum BeatIndex
-    {
-        Kick, Snare, Hihat
-    }
-
     public int beatIndex = 3;
 
     // color generator script
@@ -52,8 +47,4 @@ public class CarScript : MonoBehaviour {
         rendererComponent = GetComponent<Renderer>();
     }
 
-    // Update is called once per frame
-    void Update () {
-	
-	}
 }
