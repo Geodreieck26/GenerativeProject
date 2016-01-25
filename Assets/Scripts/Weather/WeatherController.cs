@@ -36,18 +36,6 @@ public class WeatherController : MonoBehaviour {
 	public float lightningProbability = 0.8f;
 
 	[SerializeField]
-	[Range(1f, 2f)]
-	public float scaleCloudX = 1f;
-
-	[SerializeField]
-	[Range(1f, 2f)]
-	public float scaleCloudY = 1f;
-
-	[SerializeField]
-	[Range(1f, 2f)]
-	public float scaleCloudZ = 1f;
-
-	[SerializeField]
 	[Range(0.2f, 1f)]
 	public float cloudSpawnRate = 0.5f;
 
@@ -75,13 +63,19 @@ public class WeatherController : MonoBehaviour {
 		Kick, Snare, Hihat
 	}
 
+	private float scaleCloudX = 1f;
+	private float scaleCloudY = 1f;
+	private float scaleCloudZ = 1f;
+
 	private float timerHelperCloudColor = 0f;
 	private float timerHelperCloudSpawn = 0f;
+	private float timerHelperLightningSpawn = 0f;
 	private bool setCloud;
+	private bool setLightning;
 
-	private float lightPosWidth = 10f;
+	private float lightPosWidth = 100f;
 	private float lightNearPlane = 350f;
-	private float lightFarPlane = 3000f;
+	private float lightFarPlane = 2500f;
 
 	private float lightningHeight = 5000f;
 
@@ -98,19 +92,23 @@ public class WeatherController : MonoBehaviour {
 	// Update is called once per frame
 	void FixedUpdate () {
 
-		if(meshGenerator.IsSectorFreeway()) {
-
 			timerHelperCloudColor -= Time.deltaTime;
 			timerHelperCloudSpawn += Time.deltaTime;
+			timerHelperLightningSpawn += Time.deltaTime;
+
+			if (meshGenerator.IsSectorFreeway ()) {
+				cloudSpawnRate = 0.1f;
+			} else {
+				cloudSpawnRate = 0.8f;
+			}
 
 			if (setCloud) {
-				generateClouds ();
+				generateClouds();
 				setCloud = false;
 			} else if(timerHelperCloudSpawn >= cloudSpawnRate) {
 				setCloud = true;
 				timerHelperCloudSpawn = 0f;
 			}
-		}
 
 	}
 	
@@ -120,7 +118,7 @@ public class WeatherController : MonoBehaviour {
 
 		if(timerHelperCloudColor <= 0f) {
 			col = colorGenerator.GenColor (1f,1f);
-			timerHelperCloudColor = 3f;
+			timerHelperCloudColor = 2f;
 		}
 
 		GameObject cloud = Instantiate (Cloudpref, CloudPos, Quaternion.identity) as GameObject;
@@ -130,13 +128,22 @@ public class WeatherController : MonoBehaviour {
 	}
 
 	Vector3 scaleCloud() {
+		if (!meshGenerator.IsSectorFreeway()) {
+			scaleCloudX = 2.5f;
+			scaleCloudY = 2.5f;
+			scaleCloudZ = 2.5f;
+		} else {
+			scaleCloudX = 1.3f;
+			scaleCloudY = 1.3f;
+			scaleCloudZ = 1.3f;
+		}
 		return new Vector3 (Random.Range (scaleCloudX+0.5f, scaleCloudX-0.5f), Random.Range (scaleCloudY+0.5f, scaleCloudY-0.5f),Random.Range (scaleCloudZ+0.5f, scaleCloudZ-0.5f));
 	}
 
 	void generateLightning () {
 
 		float rndX = Random.Range (pos[0].x - lightFarPlane, pos[0].x - lightNearPlane);
-		float rndZ = Random.Range (pos[0].z + lightPosWidth, pos[1].z - lightPosWidth);
+		float rndZ = Random.Range (pos[0].z - lightPosWidth, pos[1].z + lightPosWidth);
 		LightningPos = new Vector3 (rndX, lightningHeight, rndZ); 
 
 		Destroy (Instantiate (Lightningpref, LightningPos, Quaternion.identity) as GameObject, 0.3f);
@@ -145,12 +152,17 @@ public class WeatherController : MonoBehaviour {
 
 
 	public void BeatSetLightning() {
-		float rnd = Random.Range (0f,1f);
-
 		if (meshGenerator.IsSectorFreeway ()) {
-			if (rnd < lightningProbability) {
-				generateLightning ();
+			generateLightning ();
+		} else {
+			if(setLightning) {
+				generateLightning();
+				setLightning = false;
+			} else if(timerHelperLightningSpawn > 0.5f) {
+				setLightning = true;
+				timerHelperLightningSpawn = 0f;
 			}
+
 		}
 	} 
 }
