@@ -196,7 +196,8 @@ public class MeshGenerator : MonoBehaviour
 
     private bool placeCollider;
 
-   
+
+    private bool countUp = false;
 
 
     // Use this for initialization
@@ -771,7 +772,6 @@ public class MeshGenerator : MonoBehaviour
 
     public bool IsSectorFreeway()
     {
-
         if(currentSector == Sector.Building || currentSector == Sector.Crossing)
         {
             return false;
@@ -803,9 +803,7 @@ public class MeshGenerator : MonoBehaviour
         meshFilter.mesh = mesh;
     }
 
-
-
-
+    
 
     void CorrectIndices(int amount)
     {
@@ -839,6 +837,23 @@ public class MeshGenerator : MonoBehaviour
     {
         objectsToMove.Add(Instantiate(tafalEnd, assetSpawns[1], tafalEnd.transform.rotation) as GameObject);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Update is called once per frame
     void Update()
@@ -877,7 +892,7 @@ public class MeshGenerator : MonoBehaviour
                             {
                                 if(propability[i] < buildingControlPropability[i])
                                 {
-                                    propability[i] += Time.deltaTime*freewayBuidlingEaseTime;
+                                    propability[i] += Time.deltaTime*5;
                                 }
                                 else
                                 {
@@ -925,7 +940,7 @@ public class MeshGenerator : MonoBehaviour
                             {
                                 if(propability[i] > 0)
                                 {
-                                    propability[i] -= Time.deltaTime*freewayBuidlingEaseTime;
+                                    propability[i] -= Time.deltaTime*5;
                                 }
                             }                            
                         }
