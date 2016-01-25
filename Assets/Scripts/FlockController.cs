@@ -47,10 +47,6 @@ public class FlockController : MonoBehaviour
     // the boid prefab
     [SerializeField]
     public GameObject boidPrefab;
-    public enum BeatIndex
-    {
-        Kick, Snare, Hihat
-    }
     public bool[] colorChangeEnabled;
     [SerializeField]
     public float colorChangeRate = 0.05f;
@@ -77,7 +73,6 @@ public class FlockController : MonoBehaviour
         // get sound analyzer & color generator
         audioAnalyzer = FindObjectOfType<AudioAnalyzer>();
         colorGenerator = FindObjectOfType<ColorGenerator>();
-        FindObjectOfType<BeatDetection>().CallBackFunction = BeatCallbackEventHandler;
 
         // init boids within collider of flock
         boids = new GameObject[flockSize];
@@ -133,27 +128,8 @@ public class FlockController : MonoBehaviour
         }
     }
 
-    // handles the beat events
-    public void BeatCallbackEventHandler(BeatDetection.EventInfo eventInfo)
-    {
-        switch (eventInfo.messageInfo)
-        {
-            case BeatDetection.EventType.Energy:
-                break;
-            case BeatDetection.EventType.HitHat:
-                BeatChangeColor(BeatIndex.Hihat);
-                break;
-            case BeatDetection.EventType.Kick:
-                BeatChangeColor(BeatIndex.Kick);
-                break;
-            case BeatDetection.EventType.Snare:
-                BeatChangeColor(BeatIndex.Snare);
-                break;
-        }
-    }
-
     //changes the color according to beat
-    void BeatChangeColor(BeatIndex index)
+    public void BeatChangeColor(BeatEventManager.BeatIndex index)
     {
         Color color = colorGenerator.GenColor(1f, 1f);
         for (int i = 0; i < boids.Length; i++)

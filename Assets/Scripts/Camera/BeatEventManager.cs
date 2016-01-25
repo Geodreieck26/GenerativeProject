@@ -9,20 +9,10 @@ public class BeatEventManager : MonoBehaviour {
         Kick, Snare, Hihat
     }
 
-    public int beatIndex = 3;
-
-    // Defines, if the changing of the Object is allowed.
-    private bool colorChangeAllowed = true;
-
-    // sound analyzer script
-    private AudioAnalyzer audioAnalyzer;
-
-    // color generator script
-    public ColorGenerator colorGenerator;
-
     public CarScript carScript;
     public CameraScript cameraScript;
     public SpawnManager spawnManager;
+    public FlockController flockController;
 
     // Use this for initialization
     void Start () {
@@ -30,6 +20,7 @@ public class BeatEventManager : MonoBehaviour {
         carScript = FindObjectOfType<CarScript>();
         cameraScript = FindObjectOfType<CameraScript>();
         spawnManager = FindObjectOfType<SpawnManager>();
+        flockController = FindObjectOfType<FlockController>();
     }
 
     private void BeatCallbackEventHandler(BeatDetection.EventInfo eventInfo)
@@ -39,25 +30,35 @@ public class BeatEventManager : MonoBehaviour {
             case BeatDetection.EventType.Energy:
                 break;
             case BeatDetection.EventType.HitHat:
-                carScript.BeatChangeColor(BeatIndex.Hihat);
-                cameraScript.calculateWaypoint(BeatIndex.Hihat);
-                spawnManager.placeAssets(BeatIndex.Hihat);
+                if (carScript)
+                    carScript.BeatChangeColor(BeatIndex.Hihat);
+                if(cameraScript)
+                    cameraScript.calculateWaypoint(BeatIndex.Hihat);
+                if(spawnManager)
+                    spawnManager.placeAssets(BeatIndex.Hihat);
+                if(flockController)
+                    flockController.BeatChangeColor(BeatIndex.Hihat);
                 break;
             case BeatDetection.EventType.Kick:
-                carScript.BeatChangeColor(BeatIndex.Kick);
-                cameraScript.calculateWaypoint(BeatIndex.Kick);
-                spawnManager.placeAssets(BeatIndex.Kick);
+                if (carScript)
+                    carScript.BeatChangeColor(BeatIndex.Kick);
+                if (cameraScript)
+                    cameraScript.calculateWaypoint(BeatIndex.Kick);
+                if (spawnManager)
+                    spawnManager.placeAssets(BeatIndex.Kick);
+                if (flockController)
+                    flockController.BeatChangeColor(BeatIndex.Kick);
                 break;
             case BeatDetection.EventType.Snare:
-                cameraScript.calculateWaypoint(BeatIndex.Snare);
-                carScript.BeatChangeColor(BeatIndex.Snare);
-                spawnManager.placeAssets(BeatIndex.Snare);
+                if (cameraScript)
+                    cameraScript.calculateWaypoint(BeatIndex.Snare);
+                if (carScript)
+                    carScript.BeatChangeColor(BeatIndex.Snare);
+                if (spawnManager)
+                    spawnManager.placeAssets(BeatIndex.Snare);
+                if (flockController)
+                    flockController.BeatChangeColor(BeatIndex.Snare);
                 break;
         }
     }
-
-    // Update is called once per frame
-    void Update () {
-	
-	}
 }
