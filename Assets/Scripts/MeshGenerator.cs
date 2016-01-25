@@ -194,6 +194,8 @@ public class MeshGenerator : MonoBehaviour
     }
 
 
+    private bool placeCollider;
+
 
     // Use this for initialization
     void Awake()
@@ -330,7 +332,7 @@ public class MeshGenerator : MonoBehaviour
             {
                 if (sideWalk)
                 {
-                    vertex.Set(vertices[indicesLine[i]].x, vertices[indicesLine[i]].y + 20, vertices[indicesLine[i]].z);
+                    vertex.Set(vertices[indicesLine[i]].x, vertices[indicesLine[i]].y + 10, vertices[indicesLine[i]].z);
                 }
                 else
                 {
@@ -895,6 +897,13 @@ public class MeshGenerator : MonoBehaviour
 
                     if (rowsAdded > allowedRowCount)
                     {
+                        if (!placeCollider)
+                        {
+                            placeCollider = true;
+                            gameObject.AddComponent<BoxCollider>();
+                        }
+
+
                         RemoveStructure();
                     }
 
