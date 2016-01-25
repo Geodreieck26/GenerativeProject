@@ -170,7 +170,7 @@ public class MeshGenerator : MonoBehaviour
 
     private Vector3[] cloudSpawns;
 
-
+    [SerializeField]
     private float[] buildingControlPropability;
 
     private Sector prev;
@@ -183,6 +183,7 @@ public class MeshGenerator : MonoBehaviour
     private float freewayTimer;
 
     public GameObject tafal;
+    public GameObject tafalEnd;
 
 
     public Vector3[] CloudSpawns
@@ -193,14 +194,14 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
-
     private bool placeCollider;
+
+   
 
 
     // Use this for initialization
     void Awake()
-    {
-        //sectorProbabilty = new int[3];
+    {       
         currentSector = Sector.Building;
         realSectorProbability = new float[sectorProbabilty.Length];
        
@@ -213,8 +214,7 @@ public class MeshGenerator : MonoBehaviour
         currentFrequencyData = new float[0];
 
         currentTime = 0.0f;
-        //mainCamera = Camera.main;
-
+      
         mesh = new Mesh();
         meshRenderer = GetComponent<MeshRenderer>();
         meshFilter = GetComponent<MeshFilter>();
@@ -228,34 +228,24 @@ public class MeshGenerator : MonoBehaviour
         indices[1] = new List<int>();
 
         uvs = new List<Vector2>();
-        //normals = new List<Vector3>();
+  
 
         vertex = new Vector3();
         uv = new Vector2();
-        //normal = new Vector3();
+      
 
         xStep = 1.0f / (xVertices - 1);
         zStep = 1.0f / (zVertices - 1);
 
-        //sampleStep = audioAnalyzer.Samples/zVertices;
+       
         frequencyData = new float[0];
 
         moduloCounter = 1;
 
-
-
         indicesLine = new int[zVertices];
         subMesh = new int[zVertices];
 
-
-        expandMesh = true;
-
-        //buildings = new GameObject[50];
-
-        //for (int i = 0; i < buildings.Length; i++)
-        //{
-        //    buildings[i] = Instantiate(buidlingTemplate, Vector3.zero, Quaternion.identity) as GameObject;
-        //}
+        expandMesh = true;        
 
         mesh.subMeshCount = 2;
         meshRenderer.materials = mats;
@@ -270,9 +260,12 @@ public class MeshGenerator : MonoBehaviour
         cloudSpawns = new Vector3[2];
         buildingControlPropability = new float[3];
 
-        prev = Sector.Building;
-       
+        for (int i = 0; i < propability.Length; i++)
+        {
+            buildingControlPropability[i] = propability[i];
+        }
 
+        prev = Sector.Building;
     }
 
 
@@ -290,8 +283,6 @@ public class MeshGenerator : MonoBehaviour
         {
             RemoveRow(2);
         }
-        
-
     }
 
 
@@ -299,15 +290,12 @@ public class MeshGenerator : MonoBehaviour
     {
         for (int i = 0; i < vertices.Count; i++)
         {
-
             vertex.Set(vertices[i].x - velocity * Time.deltaTime, vertices[i].y, vertices[i].z);
             vertices[i] = vertex;
         }
         mesh.SetVertices(vertices);
         mesh.RecalculateBounds();
         mesh.Optimize();
-
-
     }
 
 
@@ -320,6 +308,16 @@ public class MeshGenerator : MonoBehaviour
         return null;
     }
 
+
+    public Vector3[] GetCrossingSpawnPositions()
+    {
+        if (currentSector == Sector.Crossing)
+        {
+            return cloudSpawns;
+        }
+        return null;
+
+    }
 
 
     private void OffsetHeight(int[] indicesLine, bool sideWalk)
@@ -725,7 +723,7 @@ public class MeshGenerator : MonoBehaviour
             {
                if(prev == Sector.Freeway)
                 {
-                    freeway = false;
+                    freewayTimer = freewayBuidlingEaseTime;
 
                 }
                 currentSector = Sector.Building;
@@ -819,6 +817,9 @@ public class MeshGenerator : MonoBehaviour
     {        
         if (expandMesh)
         {
+           
+
+
             currentCooldown -= Time.deltaTime;            
             currentTime += Time.deltaTime;
 
@@ -838,15 +839,37 @@ public class MeshGenerator : MonoBehaviour
 
                         if (freeway)
                         {
-                            freeway = false;
+                            if(freewayTimer == freewayBuidlingEaseTime)
+                            {
+                                objectsToMove.Add(Instantiate(tafal, assetSpawns[1], tafal.transform.rotation) as GameObject);
+                            }
 
+                            if(freewayTimer < 0)
+                            {
+                                freeway = false;
+                               
+                                Debug.Log("tafal");
+                            }
 
+                            freewayTimer -= Time.deltaTime;
+
+                            for (int i = 0; i < propability.Length; i++)
+                            {
+                                if(propability[i] < buildingControlPropability[i])
+                                {
+                                    propability[i] += Time.deltaTime;
+                                }
+                                else
+                                {
+                                    propability[i] = buildingControlPropability[i];
+                                }
+                            }
                         }
-                        else
+                        //else
                         {
                             AddBasicRow(indicesLine, 0, true, false, true);
 
-                            if (Propability(0.7f))
+                            if (Propability(0.95f))
                             {
                                 PlaceBuidlingRow(GenerateAssembleInstruction());
                             }
@@ -871,6 +894,7 @@ public class MeshGenerator : MonoBehaviour
                         {
                             freeway = true;
                             freewayTimer = freewayBuidlingEaseTime;
+                            objectsToMove.Add(Instantiate(tafalEnd, assetSpawns[1], tafalEnd.transform.rotation) as GameObject);
                         }
 
 
@@ -884,15 +908,20 @@ public class MeshGenerator : MonoBehaviour
                                     propability[i] -= Time.deltaTime;
                                 }
                             }
-                        }
 
+                            if (freewayTimer <= 0)
+                            {
+                                objectsToMove.Add(Instantiate(tafalEnd, assetSpawns[1], tafalEnd.transform.rotation) as GameObject);
+                            }
+                        }
+                       
+                      
                         AddBasicRow(indicesLine, 0, true, false, true);
 
-
-
-
-
-
+                        if (Propability(0.95f))
+                        {
+                            PlaceBuidlingRow(GenerateAssembleInstruction());
+                        }
                     }
 
                     if (rowsAdded > allowedRowCount)
@@ -902,8 +931,6 @@ public class MeshGenerator : MonoBehaviour
                             placeCollider = true;
                             gameObject.AddComponent<BoxCollider>();
                         }
-
-
                         RemoveStructure();
                     }
 
@@ -925,11 +952,6 @@ public class MeshGenerator : MonoBehaviour
 
                         cloudSpawns[1] = new Vector3(vertices[indicesLine[indicesLine.Length-1]].x, vertices[indicesLine[indicesLine.Length - 1]].y, vertices[indicesLine[indicesLine.Length - 1]].z);
                         cloudSpawns[1] = transform.TransformPoint(cloudSpawns[1]);
-
-
-
-
-
                     }
                 }
                 else
