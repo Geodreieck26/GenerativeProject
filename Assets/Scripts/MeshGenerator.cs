@@ -15,10 +15,7 @@ public class MeshGenerator : MonoBehaviour
 
     private Queue<ObjectTypes> currentObjects;
 
-    private enum BiotopeTypes
-    {
-        City, Beach
-    }
+
 
     private enum ObjectTypes
     {
@@ -27,7 +24,7 @@ public class MeshGenerator : MonoBehaviour
 
     private enum Sector
     {
-        Building, Crossing
+        Building, Crossing, Freeway
     }
 
 
@@ -171,6 +168,20 @@ public class MeshGenerator : MonoBehaviour
     private bool onceUpdate;
 
 
+    private Vector3[] cloudSpawns;
+
+
+    private float[] buildingControlPropability;
+
+    private Sector prev;
+
+
+    private bool onceFreeway;
+    public float freewayBuidlingEaseTime;
+    private float freewayTimer;
+
+    public GameObject tafal;
+
 
     // Use this for initialization
     void Awake()
@@ -242,7 +253,11 @@ public class MeshGenerator : MonoBehaviour
         colorGen = Camera.main.GetComponent<ColorGenerator>();
 
         assetSpawns = new Vector3[2];
+        cloudSpawns = new Vector3[2];
+        buildingControlPropability = new float[3];
 
+        prev = Sector.Building;
+       
 
     }
 
@@ -261,6 +276,7 @@ public class MeshGenerator : MonoBehaviour
         {
             RemoveRow(2);
         }
+        
 
     }
 
@@ -625,16 +641,13 @@ public class MeshGenerator : MonoBehaviour
                         indices[0].Add(indexList[(i * 3) + 1]);
                         indices[0].Add(indexList[(i * 3) + 2]);
                     }
-
                 }
             }
             else
-            {
-               
+            {               
                 indices[1].Add(indexList[i * 3]);
                 indices[1].Add(indexList[(i * 3) + 1]);
-                indices[1].Add(indexList[(i * 3) + 2]);              
-
+                indices[1].Add(indexList[(i * 3) + 2]);
             }
            
         }
@@ -692,15 +705,42 @@ public class MeshGenerator : MonoBehaviour
                 }
             }
 
+            prev = currentSector;
+
             if (chosenSector == 0)
             {
+               if(prev == Sector.Freeway)
+                {
+                    onceFreeway = false;
+
+                }
                 currentSector = Sector.Building;
                 currentCooldown = Random.Range(3, 5);
             }
             else if (chosenSector == 1)
             {
-                currentSector = Sector.Crossing;
-                currentCooldown = 1.0f;
+                if(prev == Sector.Building)
+                {
+                    currentSector = Sector.Crossing;
+                    currentCooldown = 1.0f;
+                }
+                else
+                {
+                    currentSector = Sector.Building;
+                    currentCooldown = Random.Range(3, 5);
+                }
+               
+            }else if (chosenSector == 2)
+            {
+                if(prev == Sector.Building)
+                {
+                    currentSector = Sector.Freeway;
+                    currentCooldown = Random.Range(8, 12);
+                }
+                else
+                {
+                    currentCooldown = Random.Range(1,2);
+                }                
             }
         }
     }
@@ -804,6 +844,35 @@ public class MeshGenerator : MonoBehaviour
                             AddBasicRow(indicesLine, 0, true, false, false);
                         }
                     }
+                    if(currentSector == Sector.Freeway)
+                    {
+                        if (!onceFreeway)
+                        {
+                            onceFreeway = true;
+                            freewayTimer = freewayBuidlingEaseTime;
+                        }
+
+
+                        if (freewayTimer > 0)
+                        {
+                            freewayTimer -= Time.deltaTime;
+                            for(int i = 0; i < propability.Length; i++)
+                            {
+                                if(propability[i] > 0)
+                                {
+                                    propability[i] -= Time.deltaTime;
+                                }
+                            }
+                        }
+
+                        AddBasicRow(indicesLine, 0, true, false, true);
+
+
+
+
+
+
+                    }
 
                     if (rowsAdded > allowedRowCount)
                     {
@@ -845,11 +914,20 @@ public class MeshGenerator : MonoBehaviour
         {
             if (objectsToMove[i].transform.position.x < min.x && rowsAdded > allowedRowCount)
             {
-                objectsToMove[i].transform.localScale = buildingScale;
-                objectsToMove[i].GetComponent<MeshRenderer>().materials = buidlingTemplate.GetComponent<MeshRenderer>().materials;
-                objectsToMove[i].SetActive(false);
-                objectsToMove.RemoveAt(i);
-                i--;
+                if(objectsToMove[i].tag == "SkyScraper")
+                {
+                    objectsToMove[i].transform.localScale = buildingScale;
+                    objectsToMove[i].GetComponent<MeshRenderer>().materials = buidlingTemplate.GetComponent<MeshRenderer>().materials;
+                    objectsToMove[i].SetActive(false);
+                    objectsToMove.RemoveAt(i);
+                    i--;
+                }
+                else
+                {
+                    Destroy(objectsToMove[i]);
+                    objectsToMove.RemoveAt(i);
+                    i--;
+                }              
             }
             else
             {
