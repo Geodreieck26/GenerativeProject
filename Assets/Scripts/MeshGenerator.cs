@@ -320,6 +320,13 @@ public class MeshGenerator : MonoBehaviour
     }
 
 
+    private void SpawnTafal()
+    {
+        objectsToMove.Add(Instantiate(tafal, assetSpawns[1], tafal.transform.rotation) as GameObject);
+
+    }
+
+
     private void OffsetHeight(int[] indicesLine, bool sideWalk)
     {
         int streetVerts = 2;
@@ -724,6 +731,7 @@ public class MeshGenerator : MonoBehaviour
                if(prev == Sector.Freeway)
                 {
                     freewayTimer = freewayBuidlingEaseTime;
+                    Invoke("SpawnTafal", freewayBuidlingEaseTime/2);
 
                 }
                 currentSector = Sector.Building;
@@ -734,13 +742,16 @@ public class MeshGenerator : MonoBehaviour
                 if(prev == Sector.Building)
                 {
                     currentSector = Sector.Crossing;
-                    currentCooldown = 1.0f;
-                }
-                else
+                    currentCooldown = 2.0f;
+
+
+
+                }else if(prev == Sector.Crossing || prev == Sector.Freeway)
                 {
                     currentSector = Sector.Building;
                     currentCooldown = Random.Range(3, 5);
                 }
+              
                
             }else if (chosenSector == 2)
             {
@@ -755,6 +766,17 @@ public class MeshGenerator : MonoBehaviour
                 }                
             }
         }
+    }
+
+
+    public bool IsSectorFreeway()
+    {
+
+        if(currentSector == Sector.Building || currentSector == Sector.Crossing)
+        {
+            return false;
+        }
+        return true;
     }
 
 
@@ -812,13 +834,17 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
+
+    private void SpawnTafalEnd()
+    {
+        objectsToMove.Add(Instantiate(tafalEnd, assetSpawns[1], tafalEnd.transform.rotation) as GameObject);
+    }
+
     // Update is called once per frame
     void Update()
     {        
         if (expandMesh)
         {
-           
-
 
             currentCooldown -= Time.deltaTime;            
             currentTime += Time.deltaTime;
@@ -839,16 +865,10 @@ public class MeshGenerator : MonoBehaviour
 
                         if (freeway)
                         {
-                            if(freewayTimer == freewayBuidlingEaseTime)
-                            {
-                                objectsToMove.Add(Instantiate(tafal, assetSpawns[1], tafal.transform.rotation) as GameObject);
-                            }
-
+                       
                             if(freewayTimer < 0)
                             {
-                                freeway = false;
-                               
-                                Debug.Log("tafal");
+                                freeway = false;                               
                             }
 
                             freewayTimer -= Time.deltaTime;
@@ -857,7 +877,7 @@ public class MeshGenerator : MonoBehaviour
                             {
                                 if(propability[i] < buildingControlPropability[i])
                                 {
-                                    propability[i] += Time.deltaTime;
+                                    propability[i] += Time.deltaTime*freewayBuidlingEaseTime;
                                 }
                                 else
                                 {
@@ -865,15 +885,15 @@ public class MeshGenerator : MonoBehaviour
                                 }
                             }
                         }
-                        //else
-                        {
-                            AddBasicRow(indicesLine, 0, true, false, true);
+                        
+                        
+                        AddBasicRow(indicesLine, 0, true, false, true);
 
-                            if (Propability(0.95f))
-                            {
-                                PlaceBuidlingRow(GenerateAssembleInstruction());
-                            }
-                        }                       
+                        if (Propability(0.95f))
+                        {
+                            PlaceBuidlingRow(GenerateAssembleInstruction());
+                        }
+                                               
                     }
                     else if(currentSector == Sector.Crossing)
                     {
@@ -894,7 +914,7 @@ public class MeshGenerator : MonoBehaviour
                         {
                             freeway = true;
                             freewayTimer = freewayBuidlingEaseTime;
-                            objectsToMove.Add(Instantiate(tafalEnd, assetSpawns[1], tafalEnd.transform.rotation) as GameObject);
+                            Invoke("SpawnTafalEnd", freewayBuidlingEaseTime);
                         }
 
 
@@ -905,14 +925,9 @@ public class MeshGenerator : MonoBehaviour
                             {
                                 if(propability[i] > 0)
                                 {
-                                    propability[i] -= Time.deltaTime;
+                                    propability[i] -= Time.deltaTime*freewayBuidlingEaseTime;
                                 }
-                            }
-
-                            if (freewayTimer <= 0)
-                            {
-                                objectsToMove.Add(Instantiate(tafalEnd, assetSpawns[1], tafalEnd.transform.rotation) as GameObject);
-                            }
+                            }                            
                         }
                        
                       
