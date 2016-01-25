@@ -16,40 +16,48 @@ public class WeatherController : MonoBehaviour {
 	public float weatherHeight = 450f;
 
 	[SerializeField]
-	[Range(30.0f, 50.0f)]
+	[Range(30.0f, 100.0f)]
 	public float cloudHeightRange = 40f;
 
 	[SerializeField]
-	[Range(5.0f, 50.0f)]
-	public int lightningSegments = 10;
+	[Range(10.0f, 50.0f)]
+	public int lightningSegments = 25;
 
 	[SerializeField]
-	[Range(0.1f, 0.6f)]
-	public float lightningWidth = 0.3f;
+	[Range(6f, 10f)]
+	public float lightningWidth = 8f;
 
 	[SerializeField]
-	[Range(0.1f, 0.6f)]
-	public float lightningOffset = 0.3f;
-
-	[SerializeField]
-	[Range(1f, 20f)]
-	public float lightningDist = 10f;
+	[Range(5f, 10f)]
+	public float lightningOffset = 15f;
 
 	[SerializeField]
 	[Range(0.1f, 1f)]
 	public float lightningProbability = 0.5f;
 
 	[SerializeField]
-	[Range(0.7f, 2f)]
+	[Range(1f, 2f)]
 	public float scaleCloudX = 1f;
 
 	[SerializeField]
-	[Range(0.7f, 2f)]
+	[Range(1f, 2f)]
 	public float scaleCloudY = 1f;
 
 	[SerializeField]
-	[Range(0.7f, 2f)]
+	[Range(1f, 2f)]
 	public float scaleCloudZ = 1f;
+
+	[SerializeField]
+	[Range(0.3f, 2f)]
+	public float cloudSpawnRate = 0.3f;
+
+	[SerializeField]
+	[Range(3f, 5f)]
+	public float cloudDistMult = 4f;
+
+	[SerializeField]
+	[Range(0f, 360f)]
+	public float randomCloudAngle = 90f;
 
 	private Vector3 lightningPos;
 
@@ -71,7 +79,16 @@ public class WeatherController : MonoBehaviour {
 		Kick, Snare, Hihat
 	}
 
-	private float timerHelper = 0f;
+	private float timerHelperCloudColor = 0f;
+	private float timerHelperCloudSpawn = 0f;
+	private bool setCloud;
+
+	private float lightPosWidth = 200f;
+	private float lightNearPlane = 350f;
+	private float lightFarPlane = 1000f;
+
+	private Vector3 cloudRotate = new Vector3(0,1,0);
+
 
 	// Use this for initialization
 	void Start () {
@@ -85,22 +102,32 @@ public class WeatherController : MonoBehaviour {
 	// Update is called once per frame
 	void FixedUpdate () {
 
-		timerHelper -= Time.deltaTime;
-		generateClouds ();
+		timerHelperCloudColor -= Time.deltaTime;
+		timerHelperCloudSpawn += Time.deltaTime;
+
+		if (setCloud) {
+			generateClouds ();
+			setCloud = false;
+		} else if(timerHelperCloudSpawn >= cloudSpawnRate) {
+			setCloud = true;
+			timerHelperCloudSpawn = 0f;
+		}
+
 		generateLightning ();
 
 	}
 	
 
 	void generateClouds () {
-		cloudPos = new Vector3 (pos[0].x*3, Random.Range (weatherHeight + cloudHeightRange, weatherHeight - cloudHeightRange), Random.Range(pos[0].z, pos[1].z));
+		cloudPos = new Vector3 (pos[0].x * cloudDistMult, Random.Range (weatherHeight + cloudHeightRange, weatherHeight - cloudHeightRange), Random.Range(pos[0].z, pos[1].z));
 
-		if(timerHelper <= 0f) {
+		if(timerHelperCloudColor <= 0f) {
 			col = colorGenerator.GenColor (1f,1f);
-			timerHelper = 3f;
+			timerHelperCloudColor = 3f;
 		}
 
 		GameObject cloud = Instantiate (Cloudpref, CloudPos, Quaternion.identity) as GameObject;
+		//cloud.transform.RotateAround (this.transform.position, cloudRotate , randomCloudAngle);
 		cloud.transform.localScale = scaleCloud ();
 		cloud.GetComponent<MeshRenderer> ().material.SetColor("_EmissionColor", col);
 		objectsToMove.Add (cloud);
@@ -111,16 +138,19 @@ public class WeatherController : MonoBehaviour {
 	}
 
 	void generateLightning () {
-		float rndX = Random.Range (pos[0].x - lightningDist, pos[0].x + lightningDist);
-		LightningPos = new Vector3 (rndX, weatherHeight, Random.Range(pos[0].z, pos[1].z));
+
+		float rndX = Random.Range (pos[0].x - lightFarPlane, pos[0].x - lightNearPlane);
+		float rndZ = Random.Range (pos[0].z + lightPosWidth, pos[1].z - lightPosWidth);
+		LightningPos = new Vector3 (rndX, cloudPos.y, rndZ);
 		Destroy(Instantiate (Lightningpref, lightningPos, Quaternion.identity) as GameObject, 0.3f);
+
 	}
 
 
 	public void BeatSetLightning() {
 		float rnd = Random.Range (0f,1f);
 
-		if(rnd < (0.5f * lightningProbability)) {
+		if(rnd < (0.5f)) {
 			generateLightning ();
 		}
 	} 

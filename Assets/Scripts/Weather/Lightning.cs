@@ -41,7 +41,7 @@ public class Lightning : MonoBehaviour {
 
 		lineRenderer.SetVertexCount(numOfSegments);		
 		lineRenderer.SetWidth(lineWidth / 2f, lineWidth / 2f);
-		lineRenderer.SetColors (colourSky, colourFloor);
+		lineRenderer.SetColors (colourFloor, colourFloor);
 
 		generateRandomLightnings ();
 		setLightning ();
