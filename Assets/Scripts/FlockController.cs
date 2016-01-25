@@ -169,14 +169,18 @@ public class FlockController : MonoBehaviour
             if(boid.GetComponentsInChildren<BoidVisible>()[0].visible)
             {
                 destroyable = false;
-                Debug.Log("no new flock");
             }
         }
 
         if (destroyable)
         {
-            Debug.Log("new flock");
+            Debug.Log("new flock instantiated");
             Instantiate(flockPrefab, transform.position, transform.rotation);
+        
+            foreach (GameObject boid in boids)
+            {
+                DestroyObject(boid);
+            }
             DestroyObject(gameObject);
         }
     }
@@ -184,6 +188,5 @@ public class FlockController : MonoBehaviour
     void OnDestroy()
     {
         CancelInvoke();
-        
     }
 }
