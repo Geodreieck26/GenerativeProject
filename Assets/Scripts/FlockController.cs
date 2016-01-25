@@ -115,7 +115,7 @@ public class FlockController : MonoBehaviour
         flockCenter = center / flockSize;
         flockVel = velocity / flockSize;
 
-        // test change weights with frequency
+        // change weights with frequency
         if (audioAnalyzer != null)
         {
             frequencyData = audioAnalyzer.GetFrequencyData();
@@ -124,7 +124,10 @@ public class FlockController : MonoBehaviour
             {
                 data += frequencyData[i];
             }
-            cohesionWeight = data;
+            if (data < 1.5f)
+            {
+                cohesionWeight = data;
+            }
         }
     }
 
