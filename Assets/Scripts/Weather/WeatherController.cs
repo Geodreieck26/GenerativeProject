@@ -24,8 +24,8 @@ public class WeatherController : MonoBehaviour {
 	public int lightningSegments = 25;
 
 	[SerializeField]
-	[Range(6f, 10f)]
-	public float lightningWidth = 8f;
+	[Range(8f, 15f)]
+	public float lightningWidth = 10f;
 
 	[SerializeField]
 	[Range(5f, 10f)]
@@ -48,7 +48,7 @@ public class WeatherController : MonoBehaviour {
 	public float scaleCloudZ = 1f;
 
 	[SerializeField]
-	[Range(0.5f, 2f)]
+	[Range(0.2f, 1f)]
 	public float cloudSpawnRate = 0.5f;
 
 	[SerializeField]
@@ -130,25 +130,29 @@ public class WeatherController : MonoBehaviour {
 
 	void generateLightning () {
 
+		cloudPos = new Vector3 (pos[0].x * cloudDistMult, Random.Range (weatherHeight + cloudHeightRange, weatherHeight - cloudHeightRange), Random.Range(pos[0].z, pos[1].z));
+
 		float rndX = Random.Range (pos[0].x - lightFarPlane, pos[0].x - lightNearPlane);
 		float rndZ = Random.Range (pos[0].z + lightPosWidth, pos[1].z - lightPosWidth);
-		LightningPos = new Vector3 (rndX, cloudPos.y, rndZ);
-
-		GameObject cloud = Instantiate (Cloudpref, LightningPos, Quaternion.identity) as GameObject;
-		cloud.transform.localScale = scaleCloud ();
-		cloud.GetComponent<MeshRenderer> ().material.SetColor("_EmissionColor", col);
-		objectsToMove.Add (cloud); 
+		LightningPos = new Vector3 (rndX, cloudPos.y, rndZ); 
 
 		Destroy(Instantiate (Lightningpref, LightningPos, Quaternion.identity) as GameObject, 0.3f);
+
+		GameObject cloud = Instantiate (Cloudpref, lightningPos, Quaternion.identity) as GameObject;
+		cloud.transform.localScale = scaleCloud ();
+		cloud.GetComponent<MeshRenderer> ().material.SetColor("_EmissionColor", col);
+		objectsToMove.Add (cloud);
 
 	}
 
 
 	public void BeatSetLightning() {
-		float rnd = Random.Range (0f,1f);
+		/*float rnd = Random.Range (0f,1f);
 
 		if(rnd < lightningProbability) {
 			generateLightning ();
-		}
+		} */
+
+		generateLightning ();
 	} 
 }

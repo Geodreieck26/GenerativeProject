@@ -52,6 +52,8 @@ public class BeatEventManager : MonoBehaviour {
                     cameraScript.calculateWaypoint(BeatIndex.Kick);
                 if (spawnManager)
                     spawnManager.placeAssets(BeatIndex.Kick);
+				if(weatherController)
+					weatherController.BeatSetLightning();
                 foreach (GameObject flock in flocks)
                 {
                     flock.GetComponent<FlockController>().BeatChangeColor(BeatIndex.Kick);
