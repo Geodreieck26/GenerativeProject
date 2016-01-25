@@ -917,7 +917,7 @@ public class MeshGenerator : MonoBehaviour
                 if(objectsToMove[i].tag == "SkyScraper")
                 {
                     objectsToMove[i].transform.localScale = buildingScale;
-                    objectsToMove[i].GetComponent<MeshRenderer>().materials = buidlingTemplate.GetComponent<MeshRenderer>().materials;
+                    objectsToMove[i].GetComponent<MeshRenderer>().materials = buidlingTemplate.GetComponent<MeshRenderer>().sharedMaterials;
                     objectsToMove[i].SetActive(false);
                     objectsToMove.RemoveAt(i);
                     i--;
