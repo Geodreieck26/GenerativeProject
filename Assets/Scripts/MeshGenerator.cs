@@ -176,11 +176,23 @@ public class MeshGenerator : MonoBehaviour
     private Sector prev;
 
 
-    private bool onceFreeway;
-    public float freewayBuidlingEaseTime;
+    private bool freeway;
+
+    [SerializeField]
+    private float freewayBuidlingEaseTime;
     private float freewayTimer;
 
     public GameObject tafal;
+
+
+    public Vector3[] CloudSpawns
+    {
+        get
+        {
+            return cloudSpawns;
+        }
+    }
+
 
 
     // Use this for initialization
@@ -711,7 +723,7 @@ public class MeshGenerator : MonoBehaviour
             {
                if(prev == Sector.Freeway)
                 {
-                    onceFreeway = false;
+                    freeway = false;
 
                 }
                 currentSector = Sector.Building;
@@ -821,6 +833,13 @@ public class MeshGenerator : MonoBehaviour
                             crossing = false;
                             CrossingEnd();
                         }
+
+                        if (freeway)
+                        {
+                            freeway = false;
+
+
+                        }
                         else
                         {
                             AddBasicRow(indicesLine, 0, true, false, true);
@@ -846,9 +865,9 @@ public class MeshGenerator : MonoBehaviour
                     }
                     if(currentSector == Sector.Freeway)
                     {
-                        if (!onceFreeway)
+                        if (!freeway)
                         {
-                            onceFreeway = true;
+                            freeway = true;
                             freewayTimer = freewayBuidlingEaseTime;
                         }
 
@@ -890,6 +909,17 @@ public class MeshGenerator : MonoBehaviour
 
                         assetSpawns[1] = new Vector3(vertices[indicesLine[half + streetVerts+2]].x, vertices[indicesLine[half + streetVerts+2]].y, vertices[indicesLine[half + streetVerts+2]].z);
                         assetSpawns[1] = transform.TransformPoint(assetSpawns[1]);
+
+
+                        cloudSpawns[0] = new Vector3(vertices[indicesLine[0]].x, vertices[indicesLine[0]].y, vertices[indicesLine[0]].z);
+                        cloudSpawns[0] = transform.TransformPoint(cloudSpawns[0]);
+
+                        cloudSpawns[1] = new Vector3(vertices[indicesLine[indicesLine.Length-1]].x, vertices[indicesLine[indicesLine.Length - 1]].y, vertices[indicesLine[indicesLine.Length - 1]].z);
+                        cloudSpawns[1] = transform.TransformPoint(cloudSpawns[1]);
+
+
+
+
 
                     }
                 }
