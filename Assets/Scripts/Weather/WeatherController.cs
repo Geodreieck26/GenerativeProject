@@ -12,12 +12,12 @@ public class WeatherController : MonoBehaviour {
 	private Color col;
 
 	[SerializeField]
-	[Range(70.0f, 200.0f)]
-	public float weatherHeight = 70f;
+	[Range(400.0f, 550.0f)]
+	public float weatherHeight = 450f;
 
 	[SerializeField]
-	[Range(10.0f, 30.0f)]
-	public float cloudHeightRange = 15f;
+	[Range(30.0f, 50.0f)]
+	public float cloudHeightRange = 40f;
 
 	[SerializeField]
 	[Range(5.0f, 50.0f)]
@@ -40,16 +40,16 @@ public class WeatherController : MonoBehaviour {
 	public float lightningProbability = 0.5f;
 
 	[SerializeField]
-	[Range(0.01f, 0.1f)]
-	public float scaleCloudX = 0.01f;
+	[Range(0.7f, 2f)]
+	public float scaleCloudX = 1f;
 
 	[SerializeField]
-	[Range(0.01f, 0.1f)]
-	public float scaleCloudY = 0.01f;
+	[Range(0.7f, 2f)]
+	public float scaleCloudY = 1f;
 
 	[SerializeField]
-	[Range(0.01f, 0.1f)]
-	public float scaleCloudZ = 0.01f;
+	[Range(0.7f, 2f)]
+	public float scaleCloudZ = 1f;
 
 	private Vector3 lightningPos;
 
@@ -65,6 +65,8 @@ public class WeatherController : MonoBehaviour {
 		set{this.cloudPos = value;}
 	}
 
+	private Vector3[] pos;
+
 	public enum BeatIndex {
 		Kick, Snare, Hihat
 	}
@@ -77,24 +79,25 @@ public class WeatherController : MonoBehaviour {
 		generator = FindObjectOfType<MeshGenerator> ();
 		objectsToMove = generator.ObjectsToMove;
 
+		pos = generator.CloudSpawns;
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void FixedUpdate () {
 
+		timerHelper -= Time.deltaTime;
 		generateClouds ();
 		generateLightning ();
 
-		timerHelper += Time.deltaTime;
 	}
+	
 
 	void generateClouds () {
-		Vector3[] pos = generator.GetSpawnPositions ();
-		cloudPos = new Vector3 (pos[0].x, Random.Range (weatherHeight + cloudHeightRange, weatherHeight - cloudHeightRange), Random.Range(pos[0].z, pos[1].z));
+		cloudPos = new Vector3 (pos[0].x*3, Random.Range (weatherHeight + cloudHeightRange, weatherHeight - cloudHeightRange), Random.Range(pos[0].z, pos[1].z));
 
 		if(timerHelper <= 0f) {
 			col = colorGenerator.GenColor (1f,1f);
-			timerHelper = 5f;
+			timerHelper = 3f;
 		}
 
 		GameObject cloud = Instantiate (Cloudpref, CloudPos, Quaternion.identity) as GameObject;
@@ -108,9 +111,7 @@ public class WeatherController : MonoBehaviour {
 	}
 
 	void generateLightning () {
-		Vector3[] pos = generator.GetSpawnPositions ();
 		float rndX = Random.Range (pos[0].x - lightningDist, pos[0].x + lightningDist);
-
 		LightningPos = new Vector3 (rndX, weatherHeight, Random.Range(pos[0].z, pos[1].z));
 		Destroy(Instantiate (Lightningpref, lightningPos, Quaternion.identity) as GameObject, 0.3f);
 	}
