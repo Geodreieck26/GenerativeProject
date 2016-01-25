@@ -302,7 +302,7 @@ public class MeshGenerator : MonoBehaviour
 
     public Vector3[] GetSpawnPositions()
     {
-        if(currentSector == Sector.Building)
+        if(currentSector == Sector.Building || currentSector == Sector.Freeway)
         {
             return assetSpawns;
         }
