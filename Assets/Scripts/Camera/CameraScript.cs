@@ -4,6 +4,10 @@ using System.Collections;
 public class CameraScript : MonoBehaviour {
     #region params
 
+    public int beatIndex = 0;
+
+    private bool calculateIsAllowed = true;
+    public float wayPointChangeRate = 0.05f;
     private GameObject audioBeat;
 
     // Mesh as GameObject.
@@ -104,9 +108,9 @@ public class CameraScript : MonoBehaviour {
     /// Initialize everything.
     /// </summary>
     void Start () {
-        gameObject.GetComponent<BeatDetection>().CallBackFunction = MyCallbackEventHandler;
         startPosition = transform.position;
         car = GameObject.FindGameObjectWithTag("Car");
+
         if (car != null)
         {
             generatedMesh = GameObject.FindGameObjectWithTag("Mesh");
@@ -147,17 +151,18 @@ public class CameraScript : MonoBehaviour {
         //CalculateEverything();
     }
     #region methods
-
+    /*
     /// <summary>
     /// Audio Callback eventhandler for beat detection.
     /// </summary>
     /// <param name="eventInfo">Info of the event which was triggered.</param>
     public void MyCallbackEventHandler(BeatDetection.EventInfo eventInfo)
     {
-        switch(eventInfo.messageInfo)
+        Debug.Log("Callback!!");
+        switch (eventInfo.messageInfo)
         {
             case BeatDetection.EventType.Kick:
-                //Debug.Log("Beat!!");
+                
                 beatAmount++;
                 //calculateStaticSideSweepTargetPosition();
                 if (tweenComplete)
@@ -166,7 +171,9 @@ public class CameraScript : MonoBehaviour {
                 }                
                 break;
         }
+
     }
+    */
 
     /// <summary>
     /// Get the amount of Y-vertices in a row.
@@ -340,35 +347,48 @@ public class CameraScript : MonoBehaviour {
         Debug.Log("Completed!");
     }
 
-    void calculateWaypoint()
+    public void calculateWaypoint(BeatEventManager.BeatIndex index)
     {
+        beatAmount++;
+        if (this.beatIndex == (int)index && tweenComplete && calculateIsAllowed && beatAmount >= beatAmountCompare)
+        {
+            calculateIsAllowed = false;
+            int random = Random.Range(0, 2) - 1;
+            if (random == 0)
+            {
+                random++;
+            }
+            if (random + waypointIndex < 0)
+            {
+                waypointIndex = tweenAroundEvents.Length;
+            }
+            else if (random + waypointIndex >= tweenAroundEvents.Length)
+            {
+                waypointIndex = 0;
+            }
 
-        int random = Random.Range(0,3) - 1;
-        if (random + waypointIndex < 0)
-        {
-            waypointIndex = tweenAroundEvents.Length;
-        } else if (random + waypointIndex >= tweenAroundEvents.Length)
-        {
-            waypointIndex = 0;
-        }
-        
-        waypointIndex += random;
-        
-        if (tweenComplete)        
-        {
+            waypointIndex += random;
+
             tweenComplete = false;
             //tweenAroundEvents[waypointIndex].
-            Debug.Log("random Number: " + random);
+            
             Debug.Log("waypointindex Number: " + waypointIndex);
             tweenAroundEvents[waypointIndex].Play();
-            
             beatAmount = 0;
+            StartCoroutine(WaitforEnable());
+            
         }
+
+    }
+    IEnumerator WaitforEnable()
+    {
+        yield return new WaitForSeconds(wayPointChangeRate);
+        calculateIsAllowed = true;
     }
 
     void Update()
     {
-        //transform.LookAt(lookAtPosition, new Vector3(0, 1, 0));
+        transform.LookAt(lookAtPosition, new Vector3(0, 1, 0));
         
         //fancyCameraMove();
         //cameraMove();       

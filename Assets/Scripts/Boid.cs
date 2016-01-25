@@ -25,7 +25,7 @@ public class Boid : MonoBehaviour
         currFlyTime = controller.flyUpdateRate;
 
         // set index
-        index = (int)Random.Range(0, 2.99f);
+        index = Random.Range(0,3);
         Debug.Log(index);
 
         // set animation
