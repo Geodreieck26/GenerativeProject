@@ -12,8 +12,8 @@ public class WeatherController : MonoBehaviour {
 	private Color col;
 
 	[SerializeField]
-	[Range(550.0f, 700.0f)]
-	public float weatherHeight = 600f;
+	[Range(300.0f, 450.0f)]
+	public float weatherHeight = 400f;
 
 	[SerializeField]
 	[Range(30.0f, 100.0f)]
@@ -147,10 +147,10 @@ public class WeatherController : MonoBehaviour {
 	public void BeatSetLightning() {
 		float rnd = Random.Range (0f,1f);
 
-		if(rnd < lightningProbability) {
-			generateLightning ();
-		} 
-
-		//generateLightning ();
+		if (meshGenerator.IsSectorFreeway ()) {
+			if (rnd < lightningProbability) {
+				generateLightning ();
+			}
+		}
 	} 
 }
