@@ -48,6 +48,13 @@ public class BeatEventManager : MonoBehaviour {
                     spawnManager.placeAssets(BeatIndex.Kick);
                 if (flockController)
                     flockController.BeatChangeColor(BeatIndex.Kick);
+
+                GameObject[] tafalen = GameObject.FindGameObjectsWithTag("Tafalende");
+                foreach(GameObject tafal in tafalen)
+                {
+                    tafal.GetComponent<Tafal>().Change();
+                }
+
                 break;
             case BeatDetection.EventType.Snare:
                 if (cameraScript)
