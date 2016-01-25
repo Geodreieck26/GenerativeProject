@@ -200,6 +200,25 @@ public class MeshGenerator : MonoBehaviour
     private bool countUp = false;
 
 
+    private void GenNewMaterials()
+    {
+        Color finalColor = new Color() ;
+        for(int i = 1; i <buildingMaterials.Length; i++)
+        {
+
+            if(i==1 || i == 4) {
+                finalColor = colorGen.GenColor(1f, 1f) * Mathf.LinearToGammaSpace(34);
+            }
+           
+            buildingMaterials[i].SetColor("_EmissionColor", finalColor);
+
+        }
+
+
+    }
+
+
+
     // Use this for initialization
     void Awake()
     {       
@@ -267,6 +286,7 @@ public class MeshGenerator : MonoBehaviour
         }
 
         prev = Sector.Building;
+        GenNewMaterials();
     }
 
 
@@ -490,7 +510,8 @@ public class MeshGenerator : MonoBehaviour
 
                 mr = go.GetComponent<MeshRenderer>();
                 tempMats[0] = mr.materials[0];
-                tempMats[1] = buildingMaterials[1];
+                tempMats[1] = buildingMaterials[i+1];
+               
                 mr.materials = tempMats;
 
                 if (!once)
@@ -525,7 +546,10 @@ public class MeshGenerator : MonoBehaviour
                 go.SetActive(true);
 
                 mr = go.GetComponent<MeshRenderer>();
-                mr.materials[1] = buildingMaterials[1];
+                tempMats[0] = mr.materials[0];
+                tempMats[1] = buildingMaterials[i + 4];
+
+                mr.materials = tempMats;
 
                 scale.Set(go.transform.localScale.x, go.transform.localScale.y, go.transform.localScale.z * ((i * 0.3f) + z * 3 + 0.2f));
 
@@ -729,6 +753,11 @@ public class MeshGenerator : MonoBehaviour
 
             if (chosenSector == 0)
             {
+                if(prev == Sector.Crossing)
+                {
+                    GenNewMaterials();
+                }
+
                if(prev == Sector.Freeway)
                 {
                     freewayTimer = freewayBuidlingEaseTime;
@@ -874,6 +903,7 @@ public class MeshGenerator : MonoBehaviour
                     {
                         if (crossing)
                         {
+                            GenNewMaterials();
                             crossing = false;
                             CrossingEnd();
                         }
